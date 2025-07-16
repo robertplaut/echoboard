@@ -1,8 +1,8 @@
 {
-  "name": "react-counter",
+  "name": "echoboard",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://rplaut.github.io/react-counter",
+  "homepage": "https://robertplaut.github.io/echoboard",
   "dependencies": {
     "@supabase/supabase-js": "^2.50.3",
     "@testing-library/dom": "^10.4.0",
