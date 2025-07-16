@@ -1,6 +1,3 @@
----
-
-````markdown
 # 🔊 Echo Board – A Team Productivity Dashboard
 
 **Live Demo: [https://robertplaut.github.io/echoboard/](https://robertplaut.github.io/echoboard/)**
@@ -156,5 +153,3 @@ This is an open learning project. Feel free to fork, refactor, or extend it.
 ## 📄 License
 
 MIT — free to use, learn, and remix.
-```
-````
