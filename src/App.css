@@ -1,51 +1,165 @@
-.App {
-  text-align: center;
+/* src/App.css */
+
+/* Main App Container */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
-.container {
-  text-align: center;
-  margin-top: 100px;
-  font-family: Arial, sans-serif;
+/* Header Styles */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.heading {
-  font-size: 28px;
-  color: #333;
-}
-
-.mb-20 {
-  margin-bottom: 20px;
-}
-
-body {
+.app-header h1 {
+  font-size: 1.75rem;
+  color: var(--color-dark);
   margin: 0;
-  padding: 0;
-  background-color: #f8f9fa;
+}
+
+/* Dashboard Grid Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+/* Widget Card Styles */
+.widget-card {
+  background-color: var(--color-surface);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.widget-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.widget-card h2 {
+  font-size: 1.25rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-dark);
+}
+
+/* Form Element Styling */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-primary);
+}
+
+input[type='text'],
+input[type='date'],
+select,
+textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  box-sizing: border-box; /* Important for width: 100% */
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* Button Styles */
+.btn {
+  display: inline-block;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: var(--color-primary);
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  border: 1px solid transparent;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  transition: background-color 0.15s ease-in-out;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-logout {
+  background-color: var(--color-text-secondary);
+}
+.btn-logout:hover {
+  background-color: var(--color-dark);
+}
+
+/* User Login Card Grid */
+.user-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
 }
 
 .user-card {
-  border: 1px solid #ddd;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  padding: 15px;
+  padding: 1.5rem 1rem;
   text-align: center;
   cursor: pointer;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .user-card:hover {
-  transform: scale(1.03);
+  transform: translateY(-5px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 .avatar-img {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  margin-bottom: 10px;
+  margin-bottom: 1rem;
 }
 
 .user-name {
-  font-weight: bold;
-  font-size: 16px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-dark);
+}
+
+.user-role {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+/* Utility Classes */
+.mb-20 {
+  /* We can keep this for now or refactor later */
+  margin-bottom: 20px;
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 2rem 0;
 }

@@ -354,272 +354,248 @@ function App() {
   console.log('👤 user =', user)
 
   return (
-    <div className="container">
+    <div className="app-container">
       {!user ? (
-        <div className="mb-20">
-          <div className="mb-20">
+        // =================================================================
+        //  LOGGED-OUT VIEW (User Login & Creation)
+        // =================================================================
+        <div>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <h1 style={{ fontSize: '2.5rem', color: 'var(--color-dark)' }}>
+              Welcome to Echoboard
+            </h1>
+            <p
+              style={{
+                fontSize: '1.1rem',
+                color: 'var(--color-text-secondary)',
+              }}
+            >
+              Select a user to begin, or create a new user below.
+            </p>
+          </div>
+
+          {/* User Selection Grid */}
+          {Object.keys(groupedUsers).length > 0 ? (
+            Object.keys(groupedUsers)
+              .sort()
+              .map((team) => (
+                <div key={team} style={{ marginBottom: '3rem' }}>
+                  <h2
+                    style={{
+                      fontSize: '1.5rem',
+                      paddingBottom: '0.5rem',
+                      borderBottom: '1px solid var(--color-border)',
+                    }}
+                  >
+                    {team}
+                  </h2>
+                  <div
+                    className="user-card-grid"
+                    style={{ marginTop: '1.5rem' }}
+                  >
+                    {groupedUsers[team].map((userObj) => (
+                      <div
+                        key={userObj.username}
+                        onClick={() => handleQuickLogin(userObj.username)}
+                        className="user-card"
+                      >
+                        <img
+                          src={`https://api.dicebear.com/6.x/thumbs/svg?seed=${userObj.username}`}
+                          alt={userObj.username}
+                          className="avatar-img"
+                        />
+                        <div className="user-name">{userObj.username}</div>
+                        <div className="user-role">{userObj.role}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+          ) : (
+            <p style={{ textAlign: 'center' }}>
+              No users found. Please create one to get started.
+            </p>
+          )}
+
+          <hr />
+
+          {/* New User Creation Form */}
+          <div className="widget-card">
             <h2>Create New User</h2>
             <form onSubmit={handleCreateUser}>
-              <input
-                type="text"
-                placeholder="New username"
-                value={nameInput}
-                onChange={(e) =>
-                  dispatch({
-                    type: 'SET_FIELD',
-                    field: 'nameInput',
-                    value: e.target.value,
-                  })
-                }
-                style={{ padding: '5px', marginRight: '10px' }}
-              />
-              <select
-                value={newTeam}
-                onChange={(e) =>
-                  dispatch({
-                    type: 'SET_FIELD',
-                    field: 'newTeam',
-                    value: e.target.value,
-                  })
-                }
-                style={{ padding: '5px', marginRight: '10px' }}
-              >
-                <option value="">Select Team</option>
-                <option value="ENGINEERING">ENGINEERING</option>
-                <option value="PMO">PMO</option>
-                <option value="PRODUCT">PRODUCT</option>
-              </select>
-              <select
-                value={newRole}
-                onChange={(e) =>
-                  dispatch({
-                    type: 'SET_FIELD',
-                    field: 'newRole',
-                    value: e.target.value,
-                  })
-                }
-                style={{ padding: '5px', marginRight: '10px' }}
-              >
-                <option value="">Select Role</option>
-                <option value="Engineer">Engineer</option>
-                <option value="Senior Director of Engineering">
-                  Senior Director of Engineering
-                </option>
-                <option value="Senior Product Manager">
-                  Senior Product Manager
-                </option>
-                <option value="Program Manager">Program Manager</option>
-                <option value="VP of Product">VP of Product</option>
-                <option value="VP of PMO">VP of PMO</option>
-              </select>
-              <input
-                type="text"
-                placeholder="GitHub Username (optional)"
-                value={githubUsername}
-                onChange={(e) =>
-                  dispatch({
-                    type: 'SET_FIELD',
-                    field: 'githubUsername',
-                    value: e.target.value,
-                  })
-                }
-                style={{ padding: '5px', marginRight: '10px' }}
-              />
-              <button type="submit">Create User</button>
-            </form>
-
-            <hr style={{ margin: '40px auto', width: '50%' }} />
-
-            <h1 className="heading">Select a User to Log In</h1>
-
-            {Object.keys(groupedUsers).length > 0 ? (
-              <div
-                style={{
-                  display: 'block',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                  gap: '20px',
-                  padding: '20px',
-                }}
-              >
-                {Object.keys(groupedUsers)
-                  .sort()
-                  .map((team, index) => (
-                    <div key={team} style={{ marginBottom: '60px' }}>
-                      {index > 0 && (
-                        <hr style={{ margin: '40px auto', width: '80%' }} />
-                      )}
-
-                      <h2 style={{ textAlign: 'left', marginLeft: '20px' }}>
-                        {team}
-                      </h2>
-
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns:
-                            'repeat(auto-fit, minmax(150px, 1fr))',
-                          gap: '20px',
-                          padding: '20px',
-                        }}
-                      >
-                        {groupedUsers[team].map((userObj) => (
-                          <div
-                            key={userObj.username}
-                            onClick={() => handleQuickLogin(userObj.username)}
-                            className="user-card"
-                            style={{
-                              border: '1px solid #ddd',
-                              borderRadius: '10px',
-                              padding: '15px',
-                              textAlign: 'center',
-                              cursor: 'pointer',
-                              backgroundColor: '#fff',
-                              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                              transition: 'transform 0.2s',
-                            }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.transform = 'scale(1.03)')
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.transform = 'scale(1)')
-                            }
-                          >
-                            <img
-                              src={`https://api.dicebear.com/6.x/thumbs/svg?seed=${userObj.username}`}
-                              alt={userObj.username}
-                              className="avatar-img"
-                              style={{
-                                width: '60px',
-                                height: '60px',
-                                borderRadius: '50%',
-                                marginBottom: '10px',
-                              }}
-                            />
-                            <div
-                              style={{ fontWeight: 'bold', fontSize: '16px' }}
-                            >
-                              {userObj.username}
-                            </div>
-                            <div style={{ fontSize: '14px', color: '#555' }}>
-                              {userObj.role}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              <div className="form-group">
+                <label htmlFor="new-username">Username</label>
+                <input
+                  id="new-username"
+                  type="text"
+                  placeholder="e.g., jane.doe"
+                  value={nameInput}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET_FIELD',
+                      field: 'nameInput',
+                      value: e.target.value,
+                    })
+                  }
+                />
               </div>
-            ) : (
-              <p>No users yet. Create one above.</p>
-            )}
+              <div className="form-group">
+                <label htmlFor="new-team">Team</label>
+                <select
+                  id="new-team"
+                  value={newTeam}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET_FIELD',
+                      field: 'newTeam',
+                      value: e.target.value,
+                    })
+                  }
+                >
+                  <option value="">Select Team...</option>
+                  <option value="ENGINEERING">ENGINEERING</option>
+                  <option value="PMO">PMO</option>
+                  <option value="PRODUCT">PRODUCT</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="new-role">Role</label>
+                <select
+                  id="new-role"
+                  value={newRole}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET_FIELD',
+                      field: 'newRole',
+                      value: e.target.value,
+                    })
+                  }
+                >
+                  <option value="">Select Role...</option>
+                  <option value="Engineer">Engineer</option>
+                  <option value="Senior Director of Engineering">
+                    Senior Director of Engineering
+                  </option>
+                  <option value="Senior Product Manager">
+                    Senior Product Manager
+                  </option>
+                  <option value="Program Manager">Program Manager</option>
+                  <option value="VP of Product">VP of Product</option>
+                  <option value="VP of PMO">VP of PMO</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="new-github">GitHub Username (optional)</label>
+                <input
+                  id="new-github"
+                  type="text"
+                  placeholder="e.g., janedoe-github"
+                  value={githubUsername}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET_FIELD',
+                      field: 'githubUsername',
+                      value: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <button type="submit" className="btn">
+                Create User
+              </button>
+            </form>
           </div>
         </div>
       ) : (
-        <>
-          <h1 className="heading">Welcome, {user.username}!</h1>
-          <CounterButton label="Logout" onClick={handleLogout} />
-          {/* START of code to hide */}
-          {/*
-          <CounterButton
-            label={showCounter ? 'Hide Counter' : 'Show Counter'}
-            onClick={toggleVisibility}
-          />
-          {showCounter && (
-            <>
-              <CounterDisplay value={count} flash={flash} />
-              <CounterButton label="+1" onClick={increment} />
-              <CounterButton label="Reset" onClick={reset} />
-            </>
-          )}
-          {/* END of code to hide */}
+        // =================================================================
+        //  LOGGED-IN VIEW (Dashboard)
+        // =================================================================
+        <div>
+          <header className="app-header">
+            <h1>Welcome, {user.username}!</h1>
+            <CounterButton
+              label="Logout"
+              onClick={handleLogout}
+              className="btn btn-logout"
+            />
+          </header>
 
-          <GitHubPRList pullRequests={userPullRequests} />
+          <div className="dashboard-grid">
+            {/* --- GitHub PRs Widget --- */}
+            <div className="widget-card">
+              <GitHubPRList pullRequests={userPullRequests} />
+            </div>
 
-          {/* Hiding the user dashboard table */}
-          {/* <UserManager refreshTrigger={refreshKey} /> */}
-
-          {user && user.id ? (
-            <div
-              style={{
-                marginTop: '40px',
-                padding: '20px',
-                backgroundColor: '#f1f1f1',
-                borderRadius: '10px',
-              }}
-            >
+            {/* --- Summary Notes Widget --- */}
+            <div className="widget-card">
               <h2>📝 Add Summary Note</h2>
               <form
                 onSubmit={async (e) => {
                   e.preventDefault()
-
                   if (!noteText.trim()) {
                     alert('Please enter a note before submitting.')
                     return
                   }
-
-                  const { error } = await supabase.from('notes').insert([
-                    {
-                      user_id: user.id,
-                      date: noteDate,
-                      note_text: noteText.trim(),
-                    },
-                  ])
-
+                  const { error } = await supabase
+                    .from('notes')
+                    .insert([
+                      {
+                        user_id: user.id,
+                        date: noteDate,
+                        note_text: noteText.trim(),
+                      },
+                    ])
                   if (error) {
                     alert('Failed to save note.')
                     console.error('Insert error:', error)
                     return
                   }
-
-                  // After successful insert, fetch the updated list of notes
                   const updatedNotes = await fetchNotesForUser(user.id)
-
-                  // Dispatch one action to reset the form and update the list
                   dispatch({
                     type: 'SUBMIT_NOTE_SUCCESS',
                     payload: updatedNotes,
                   })
                 }}
               >
-                <div style={{ marginBottom: '10px' }}>
-                  <label>
-                    Date:{' '}
-                    <input
-                      type="date"
-                      value={noteDate}
-                      onChange={(e) =>
-                        dispatch({
-                          type: 'SET_FIELD',
-                          field: 'noteDate',
-                          value: e.target.value,
-                        })
-                      }
-                    />
-                  </label>
+                <div className="form-group">
+                  <label htmlFor="note-date">Date</label>
+                  <input
+                    id="note-date"
+                    type="date"
+                    value={noteDate}
+                    onChange={(e) =>
+                      dispatch({
+                        type: 'SET_FIELD',
+                        field: 'noteDate',
+                        value: e.target.value,
+                      })
+                    }
+                  />
                 </div>
-                <div style={{ marginBottom: '10px' }}>
-                  <label>
-                    Notes:{' '}
-                    <textarea
-                      value={noteText}
-                      onChange={(e) =>
-                        dispatch({
-                          type: 'SET_FIELD',
-                          field: 'noteText',
-                          value: e.target.value,
-                        })
-                      }
-                      rows="4"
-                      cols="50"
-                    />
-                  </label>
+                <div className="form-group">
+                  <label htmlFor="note-text">Notes</label>
+                  <textarea
+                    id="note-text"
+                    value={noteText}
+                    onChange={(e) =>
+                      dispatch({
+                        type: 'SET_FIELD',
+                        field: 'noteText',
+                        value: e.target.value,
+                      })
+                    }
+                    rows="4"
+                  />
                 </div>
-                <button type="submit">Save Note</button>
+                <button type="submit" className="btn">
+                  Save Note
+                </button>
               </form>
 
-              <hr style={{ marginTop: '30px', marginBottom: '20px' }} />
-              <h3>Submitted Notes</h3>
+              <hr />
 
+              <h3>Submitted Notes</h3>
+              {/* Note: The notes list itself is rendered inside the widget card now */}
               {Array.isArray(userNotes) && userNotes.length === 0 ? (
                 <p>No notes yet.</p>
               ) : (
@@ -630,18 +606,27 @@ function App() {
                       <li
                         key={note.id}
                         style={{
-                          marginBottom: '20px',
-                          padding: '10px',
-                          border: '1px solid #ccc',
+                          marginBottom: '1rem',
+                          padding: '1rem',
+                          border: '1px solid var(--color-border)',
                           borderRadius: '8px',
                           backgroundColor: '#fdfdfd',
                         }}
                       >
-                        <div style={{ fontSize: '0.9em', color: '#666' }}>
-                          {note.date}
+                        <div
+                          style={{
+                            fontSize: '0.9em',
+                            color: 'var(--color-text-secondary)',
+                            fontWeight: '500',
+                          }}
+                        >
+                          {new Date(note.created_at).toLocaleDateString()}
                         </div>
                         <div
-                          style={{ whiteSpace: 'pre-wrap', marginTop: '5px' }}
+                          style={{
+                            whiteSpace: 'pre-wrap',
+                            marginTop: '0.5rem',
+                          }}
                         >
                           {note.note_text}
                         </div>
@@ -650,12 +635,8 @@ function App() {
                 </ul>
               )}
             </div>
-          ) : user ? (
-            <p>Unable to load notes (user ID missing)</p>
-          ) : (
-            <p>Please select a user to begin.</p>
-          )}
-        </>
+          </div>
+        </div>
       )}
     </div>
   )
