@@ -518,6 +518,8 @@ function App() {
         <>
           <h1 className="heading">Welcome, {user.username}!</h1>
           <CounterButton label="Logout" onClick={handleLogout} />
+          {/* START of code to hide */}
+          {/*
           <CounterButton
             label={showCounter ? 'Hide Counter' : 'Show Counter'}
             onClick={toggleVisibility}
@@ -529,10 +531,12 @@ function App() {
               <CounterButton label="Reset" onClick={reset} />
             </>
           )}
+          {/* END of code to hide */}
 
           <GitHubPRList pullRequests={userPullRequests} />
 
-          <UserManager refreshTrigger={refreshKey} />
+          {/* Hiding the user dashboard table */}
+          {/* <UserManager refreshTrigger={refreshKey} /> */}
 
           {user && user.id ? (
             <div
