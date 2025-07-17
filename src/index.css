@@ -16,6 +16,19 @@
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
+/* Dark Mode Theme */
+[data-theme='dark'] {
+  --color-background: #121212;
+  --color-surface: #1e1e1e;
+  --color-primary: #3a97ff; /* A slightly brighter blue for better contrast */
+  --color-primary-hover: #5aa6ff;
+  --color-dark: #e8eaed; /* Light text for headers */
+  --color-text-primary: #e8eaed;
+  --color-text-secondary: #9aa0a6;
+  --color-border: #3a3f44;
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
 /* 3. Apply the new font and base styles to the body */
 body {
   margin: 0;

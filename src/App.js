@@ -7,6 +7,7 @@ import UserManager from './UserManager'
 import supabase from './supabaseClient'
 import { fetchPullRequests } from './githubApi'
 import GitHubPRList from './GitHubPRList'
+import ThemeToggle from './ThemeToggle'
 import './App.css'
 
 const GITHUB_OWNER = 'robertplaut'
@@ -355,6 +356,17 @@ function App() {
 
   return (
     <div className="app-container">
+      <div
+        style={{
+          position: 'fixed',
+          top: '1.5rem',
+          right: '1.5rem',
+          zIndex: 1000,
+        }}
+      >
+        <ThemeToggle />
+      </div>
+
       {!user ? (
         // =================================================================
         //  LOGGED-OUT VIEW (User Login & Creation)
@@ -513,11 +525,13 @@ function App() {
         <div>
           <header className="app-header">
             <h1>Welcome, {user.username}!</h1>
-            <CounterButton
-              label="Logout"
-              onClick={handleLogout}
-              className="btn btn-logout"
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <CounterButton
+                label="Logout"
+                onClick={handleLogout}
+                className="btn btn-logout"
+              />
+            </div>
           </header>
 
           <div className="dashboard-grid">
@@ -536,15 +550,13 @@ function App() {
                     alert('Please enter a note before submitting.')
                     return
                   }
-                  const { error } = await supabase
-                    .from('notes')
-                    .insert([
-                      {
-                        user_id: user.id,
-                        date: noteDate,
-                        note_text: noteText.trim(),
-                      },
-                    ])
+                  const { error } = await supabase.from('notes').insert([
+                    {
+                      user_id: user.id,
+                      date: noteDate,
+                      note_text: noteText.trim(),
+                    },
+                  ])
                   if (error) {
                     alert('Failed to save note.')
                     console.error('Insert error:', error)
@@ -610,7 +622,7 @@ function App() {
                           padding: '1rem',
                           border: '1px solid var(--color-border)',
                           borderRadius: '8px',
-                          backgroundColor: '#fdfdfd',
+                          backgroundColor: 'var(--color-background)',
                         }}
                       >
                         <div
@@ -626,6 +638,7 @@ function App() {
                           style={{
                             whiteSpace: 'pre-wrap',
                             marginTop: '0.5rem',
+                            color: 'var(--color-text-primary)',
                           }}
                         >
                           {note.note_text}
