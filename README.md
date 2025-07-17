@@ -2,7 +2,7 @@
 
 **Live Demo: [https://robertplaut.github.io/echoboard/](https://robertplaut.github.io/echoboard/)**
 
-A responsive, single-page React application that provides a lightweight dashboard for team members to track personal interaction counts, view their GitHub pull requests, and log daily summary notes. All data is stored and synced via [Supabase](https://supabase.com).
+A responsive, single-page React application that provides a lightweight dashboard for team members to view their GitHub pull requests and log daily summary notes. All data is stored and synced via [Supabase](https://supabase.com).
 
 ---
 
@@ -10,26 +10,25 @@ A responsive, single-page React application that provides a lightweight dashboar
 
 | Key Feature                | Description                                                                |
 | -------------------------- | -------------------------------------------------------------------------- |
+| 🌓 **Light/Dark Mode**     | Toggle between light and dark themes for user viewing comfort.             |
 | 🔐 **Team-Based Login**    | Users select their name from an avatar card grid, grouped by team.         |
 | ➕ **New User Creation**   | New users can be added with a team, role, and optional GitHub handle.      |
-| 📊 **Per-User Counter**    | Each user has their own independent counter saved to the cloud.            |
 | 🐙 **GitHub Integration**  | Lists a user's open and merged pull requests from the project repo.        |
 | 📝 **Timestamped Notes**   | Users can log daily notes, which are stored and displayed chronologically. |
-| 👁️ **User Dashboard**      | A table displays all usernames and their counters for an admin-style view. |
 | 🌩 **Real-Time Cloud Sync** | All data is stored in Supabase (PostgreSQL) and reflects in real time.     |
 
 ---
 
 ## 🛠 Tech Stack
 
-| Layer            | Tool                                           |
-| ---------------- | ---------------------------------------------- |
-| Frontend         | React (CRA)                                    |
-| State Management | React `useReducer` for centralized state logic |
-| Cloud Storage    | Supabase (PostgreSQL + REST API)               |
-| Styling          | Plain CSS & Inline CSS-in-JS                   |
-| Avatar Generator | DiceBear Avatars (URL-based API)               |
-| External APIs    | GitHub REST API (for public pull request data) |
+| Layer            | Tool                                                    |
+| ---------------- | ------------------------------------------------------- |
+| Frontend         | React (CRA)                                             |
+| State Management | React `useReducer` for centralized state logic          |
+| Cloud Storage    | Supabase (PostgreSQL + REST API)                        |
+| Styling          | CSS & Inline CSS-in-JS (with CSS Variables for Theming) |
+| Avatar Generator | DiceBear Avatars (URL-based API)                        |
+| External APIs    | GitHub REST API (for public pull request data)          |
 
 ---
 
@@ -76,23 +75,21 @@ A responsive, single-page React application that provides a lightweight dashboar
 
     - Disable Row-Level Security (RLS) for development if desired.
 
-4.  **Configure API**:
-    Create a file `src/supabaseClient.js` and add your project URL and anon key:
+4.  **Configure Environment Variables**:
 
-    ```js
-    import { createClient } from '@supabase/supabase-js'
-
-    const supabaseUrl = 'https://YOUR_PROJECT.supabase.co'
-    const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY'
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
-    export default supabase
-    ```
+    - In the root directory of your project, create a file named `.env`.
+    - Add your Supabase URL and anonymous key to this file. The `REACT_APP_` prefix is required.
+      ```
+      REACT_APP_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+      REACT_APP_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+      ```
+    - The `supabaseClient.js` file is already configured to read these variables.
 
 5.  **Start the app**:
     ```bash
     npm start
     ```
+    _(You must restart the server after creating or modifying the `.env` file)_
 
 ---
 
@@ -100,21 +97,15 @@ A responsive, single-page React application that provides a lightweight dashboar
 
 ### 🧍 Login Screen
 
-Users are shown as avatar cards grouped by team. Clicking a card logs that user in. New users can be created via the form, which prevents duplicate usernames.
-
-### 🧮 Counter & Dashboard
-
-The main view shows a counter for the logged-in user. `+1` and `Reset` buttons update the counter, and changes are written to Supabase and reflected immediately in the admin dashboard table at the bottom of the page.
+Users are shown as avatar cards grouped by team. Clicking a card logs that user in. New users can be created via a dedicated form. The theme can be switched at any time using the toggle in the corner.
 
 ### 🐙 GitHub PRs & 📝 Summary Notes
 
-If a GitHub username is provided for a user, the dashboard fetches and displays all pull requests associated with that user from the main repository. Additionally, a user can submit daily notes with a date and text, which are saved and displayed in reverse-chronological order.
+After logging in, the dashboard displays two main widgets. One fetches and displays all pull requests associated with the user's GitHub handle. The other allows the user to submit daily notes, which are saved and displayed in reverse-chronological order.
 
 ---
 
 ## 📦 Folder Structure
-
-````
 
 echoboard/
 ├── public/
@@ -123,24 +114,23 @@ echoboard/
 │ ├── App.js # Main app logic and state
 │ ├── App.css # Global styling
 │ ├── CounterButton.js
-│ ├── CounterDisplay.js
 │ ├── githubApi.js # Logic for fetching from GitHub API
 │ ├── GitHubPRList.js # Component to display PRs
 │ ├── supabaseClient.js # Supabase configuration
-│ └── UserManager.js # Component for the all-users table
+│ ├── ThemeToggle.js # The dark/light mode toggle component
+│ └── useTheme.js # The custom hook for theme logic
 ├── package.json
 └── README.md
-
-```
 
 ---
 
 ## 🚀 Possible Future Features
 
--   🔑 Authentication via Supabase (email/password or GitHub OAuth)
--   🗑️ Note editing and deleting functionality
--   📈 Team-level dashboards and aggregated stats
--   ✅ CI workflow that runs tests and auto-deploys on merge to main
+- 🔑 Authentication via Supabase (email/password or GitHub OAuth) with Row Level Security.
+- 🗑️ Note editing and deleting functionality.
+- 📈 Team-level dashboards and aggregated stats.
+- 🤖 AI-powered daily email summaries for team leads.
+- ✅ CI workflow that runs tests and auto-deploys on merge to main.
 
 ---
 
