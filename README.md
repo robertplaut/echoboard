@@ -1,8 +1,13 @@
-# 🔊 Echo Board – A Team Productivity Dashboard
+# 🔊 Echoboard – A Team Productivity Dashboard
 
 **Live Demo: [https://robertplaut.github.io/echoboard/](https://robertplaut.github.io/echoboard/)**
 
 A responsive, single-page React application that provides a lightweight dashboard for team members to view their GitHub pull requests and log daily summary notes. All data is stored and synced via [Supabase](https://supabase.com).
+
+Official name: Echoboard
+- Use Echoboard when you write about the app.
+- Use EchoBoard as a strong candidate for your logo design.
+- Continue using echoboard for all your URLs, repo names, and other technical contexts.
 
 ---
 
