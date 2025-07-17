@@ -107,6 +107,7 @@ After logging in, the dashboard displays two main widgets. One fetches and displ
 
 ## 📦 Folder Structure
 
+```text
 echoboard/
 ├── public/
 │ └── index.html # Main HTML template, title, meta tags
@@ -121,6 +122,7 @@ echoboard/
 │ └── useTheme.js # The custom hook for theme logic
 ├── package.json
 └── README.md
+```
 
 ---
 
