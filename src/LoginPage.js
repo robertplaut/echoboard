@@ -3,7 +3,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-// This component will receive a lot of props from App.js
+// 1. Add `email` to the list of props this component receives
 function LoginPage({
   groupedUsers,
   handleQuickLogin,
@@ -12,7 +12,8 @@ function LoginPage({
   newTeam,
   newRole,
   githubUsername,
-  dispatch, // We pass dispatch down to handle form inputs
+  email, // <-- ADD THIS PROP
+  dispatch,
 }) {
   return (
     <div>
@@ -29,7 +30,7 @@ function LoginPage({
         </p>
       </div>
 
-      {/* User Selection Grid */}
+      {/* User Selection Grid (no changes here) */}
       {Object.keys(groupedUsers).length > 0 ? (
         Object.keys(groupedUsers)
           .sort()
@@ -48,9 +49,9 @@ function LoginPage({
                 {groupedUsers[team].map((userObj) => (
                   <Link
                     key={userObj.username}
-                    to={`/user/${userObj.username}`} // The destination URL
+                    to={`/user/${userObj.username}`}
                     className="user-card"
-                    style={{ textDecoration: 'none' }} // Add this to remove the default link underline
+                    style={{ textDecoration: 'none' }}
                   >
                     <img
                       src={`https://api.dicebear.com/6.x/thumbs/svg?seed=${userObj.username}`}
@@ -87,6 +88,23 @@ function LoginPage({
                 dispatch({
                   type: 'SET_FIELD',
                   field: 'nameInput',
+                  value: e.target.value,
+                })
+              }
+            />
+          </div>
+          {/* 2. Add the new form group for the Email field */}
+          <div className="form-group">
+            <label htmlFor="new-email">Email</label>
+            <input
+              id="new-email"
+              type="email" // Using type="email" gives basic browser validation
+              placeholder="e.g., jane.doe@example.com"
+              value={email}
+              onChange={(e) =>
+                dispatch({
+                  type: 'SET_FIELD',
+                  field: 'email',
                   value: e.target.value,
                 })
               }

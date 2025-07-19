@@ -1,7 +1,6 @@
 // src/App.js
 
 import React, { useEffect, useReducer, useCallback } from 'react'
-// 1. Import routing components
 import {
   Routes,
   Route,
@@ -9,12 +8,8 @@ import {
   useParams,
   useLocation,
 } from 'react-router-dom'
-
-// Import our new page components
 import LoginPage from './LoginPage'
 import DashboardPage from './DashboardPage'
-
-// Other component imports
 import ThemeToggle from './ThemeToggle'
 import supabase from './supabaseClient'
 import { fetchPullRequests } from './githubApi'
@@ -23,18 +18,21 @@ import './App.css'
 const GITHUB_OWNER = 'robertplaut'
 const GITHUB_REPO = 'echoboard'
 
-// The initialState and reducer function remain EXACTLY the same.
-// NO CHANGES in this section.
 const initialState = {
   user: null,
   userList: [],
-  // ... other state properties
+  nameInput: '',
+  email: '',
+  newTeam: '',
+  newRole: '',
+  githubUsername: '',
+  userPullRequests: [],
+  noteDate: new Date().toISOString().split('T')[0],
   noteText: '',
   userNotes: [],
 }
 
 function reducer(state, action) {
-  // ... This function is unchanged.
   switch (action.type) {
     case 'SET_FIELD':
       return { ...state, [action.field]: action.value }
@@ -42,39 +40,22 @@ function reducer(state, action) {
       return {
         ...state,
         nameInput: '',
+        email: '',
         newTeam: '',
         newRole: '',
         githubUsername: '',
         userList: [...state.userList, action.payload],
       }
     case 'LOGIN_SUCCESS':
-      return {
-        ...state,
-        user: action.payload,
-        count: action.payload.counter || 0,
-      }
+      return { ...state, user: action.payload }
     case 'SET_NOTES':
       return { ...state, userNotes: action.payload }
     case 'LOGOUT':
-      return {
-        ...state,
-        user: null,
-        count: 0,
-        userNotes: [],
-        userPullRequests: [],
-      }
-    case 'SET_COUNT':
-      return { ...state, count: action.payload }
-    case 'SET_FLASH':
-      return { ...state, flash: action.payload }
-    case 'INCREMENT_REFRESH_KEY':
-      return { ...state, refreshKey: state.refreshKey + 1 }
+      return { ...state, user: null, userNotes: [], userPullRequests: [] }
     case 'SET_USER_LIST':
       return { ...state, userList: action.payload }
     case 'SET_PULL_REQUESTS':
       return { ...state, userPullRequests: action.payload }
-    case 'TOGGLE_COUNTER':
-      return { ...state, showCounter: !state.showCounter }
     case 'SUBMIT_NOTE_SUCCESS':
       return {
         ...state,
@@ -82,29 +63,30 @@ function reducer(state, action) {
         noteDate: new Date().toISOString().split('T')[0],
         userNotes: action.payload,
       }
+
+    // 1. Add the new reducer case for a successful profile update
+    case 'UPDATE_USER_SUCCESS':
+      return {
+        ...state,
+        user: action.payload, // Update the logged-in user's data
+      }
+
     default:
       return state
   }
 }
 
-// A new wrapper component to handle data loading for the dashboard
-// Update this wrapper component
 function DashboardWrapper(props) {
   const { username } = useParams()
-  const { user, handleQuickLogin } = props // Destructure for readability
-
+  const { user, handleQuickLogin } = props
   useEffect(() => {
-    // The logic inside remains the same
     if (!user || user.username !== username) {
       handleQuickLogin(username)
     }
-    // BUT we update the dependency array to be much stricter
-  }, [username, handleQuickLogin]) // Only re-run if the username from the URL changes
-
+  }, [username, handleQuickLogin])
   if (!user || user.username !== username) {
     return <div>Loading user dashboard...</div>
   }
-
   return <DashboardPage {...props} />
 }
 
@@ -114,6 +96,7 @@ function App() {
     user,
     userList,
     nameInput,
+    email,
     newTeam,
     newRole,
     githubUsername,
@@ -123,13 +106,9 @@ function App() {
     userNotes,
   } = state
 
-  // 2. Initialize the navigate function
   const navigate = useNavigate()
-
   const location = useLocation()
 
-  // This function is now ASYNCHRONOUS to work better with navigation
-  // Wrap this function in useCallback
   const handleQuickLogin = useCallback(
     async (username) => {
       const { data: userData, error } = await supabase
@@ -137,31 +116,27 @@ function App() {
         .select('*')
         .eq('username', username)
         .single()
-
       if (error || !userData) {
         alert('Error logging in')
-        navigate('/') // Navigate home on error
+        navigate('/')
         return
       }
-
       dispatch({ type: 'LOGIN_SUCCESS', payload: userData })
       const notes = await fetchNotesForUser(userData.id)
       dispatch({ type: 'SET_NOTES', payload: notes })
-
       navigate(`/user/${userData.username}`)
     },
     [navigate]
-  ) // The dependency is navigate
+  )
 
   const handleCreateUser = async (e) => {
     e.preventDefault()
     const newUsername = nameInput.trim()
-
-    if (!newUsername || !newTeam || !newRole) {
+    const newEmail = email.trim()
+    if (!newUsername || !newEmail || !newTeam || !newRole) {
       alert('Please fill out all required fields.')
       return
     }
-
     const { data: existingUser } = await supabase
       .from('users')
       .select('id')
@@ -171,16 +146,14 @@ function App() {
       alert('Username already exists. Choose another.')
       return
     }
-
     const newUser = {
       username: newUsername,
-      counter: 0,
+      email: newEmail,
       team: newTeam,
       role: newRole,
-      github_username: githubUsername || null,
+      github_username: githubUsername.trim() || null,
     }
     const { error } = await supabase.from('users').insert([newUser])
-
     if (error) {
       alert('Error creating user.')
       console.error('Insert error:', error)
@@ -191,8 +164,34 @@ function App() {
 
   const handleLogout = () => {
     dispatch({ type: 'LOGOUT' })
-    // 4. Navigate back to the login page on logout
     navigate('/')
+  }
+
+  // 2. Create the handleProfileUpdate function
+  const handleProfileUpdate = async (formData) => {
+    if (!user) return // Safety check
+
+    const { data: updatedUser, error } = await supabase
+      .from('users')
+      .update({
+        email: formData.email,
+        team: formData.team,
+        role: formData.role,
+        github_username: formData.github_username,
+      })
+      .eq('id', user.id)
+      .select() // Use .select() to get the updated row back from the database
+      .single()
+
+    if (error) {
+      alert('Failed to update profile.')
+      console.error('Update error:', error)
+      return
+    }
+
+    // Dispatch an action with the updated user data to refresh the UI
+    dispatch({ type: 'UPDATE_USER_SUCCESS', payload: updatedUser })
+    alert('Profile updated successfully!')
   }
 
   const fetchNotesForUser = async (userId) => {
@@ -209,7 +208,6 @@ function App() {
     return Array.isArray(data) ? data : []
   }
 
-  // New handler for note submission to pass to DashboardPage
   const handleNoteSubmit = async (e) => {
     e.preventDefault()
     if (!noteText.trim()) {
@@ -230,13 +228,12 @@ function App() {
     dispatch({ type: 'SUBMIT_NOTE_SUCCESS', payload: updatedNotes })
   }
 
-  // This useEffect hook for fetching all users remains the same
   useEffect(() => {
     const fetchUsers = async () => {
       if (!user) {
         const { data, error } = await supabase
           .from('users')
-          .select('username, counter, team, role, github_username')
+          .select('username, team, role, github_username, email')
           .order('username', { ascending: true })
         if (error) {
           console.error('Supabase fetch error:', error.message)
@@ -248,7 +245,6 @@ function App() {
     fetchUsers()
   }, [user])
 
-  // This useEffect hook for fetching PRs remains the same
   useEffect(() => {
     const fetchPRsForUser = async () => {
       if (!user || !user.github_username) {
@@ -273,15 +269,9 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const redirectPath = params.get('path')
-
     if (redirectPath) {
-      // If a path was passed in the query, navigate to it,
-      // replacing the current history entry.
       navigate('/' + redirectPath, { replace: true })
     }
-    // The empty dependency array [] ensures this runs only once on mount.
-    // We disable the ESLint warning because we intentionally want this effect
-    // to not re-run when navigate or location change after the initial load.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -303,8 +293,6 @@ function App() {
       >
         <ThemeToggle />
       </div>
-
-      {/* 5. The new routing structure */}
       <Routes>
         <Route
           path="/"
@@ -314,6 +302,7 @@ function App() {
               handleQuickLogin={handleQuickLogin}
               handleCreateUser={handleCreateUser}
               nameInput={nameInput}
+              email={email}
               newTeam={newTeam}
               newRole={newRole}
               githubUsername={githubUsername}
@@ -326,8 +315,10 @@ function App() {
           element={
             <DashboardWrapper
               user={user}
-              handleQuickLogin={handleQuickLogin} // Pass login function for data loading
+              handleQuickLogin={handleQuickLogin}
               handleLogout={handleLogout}
+              // 3. Pass the new handler function down as a prop
+              handleProfileUpdate={handleProfileUpdate}
               userPullRequests={userPullRequests}
               userNotes={userNotes}
               noteDate={noteDate}
