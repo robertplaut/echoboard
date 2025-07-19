@@ -2,7 +2,13 @@
 
 import React, { useEffect, useReducer, useCallback } from 'react'
 // 1. Import routing components
-import { Routes, Route, useNavigate, useParams } from 'react-router-dom'
+import {
+  Routes,
+  Route,
+  useNavigate,
+  useParams,
+  useLocation,
+} from 'react-router-dom'
 
 // Import our new page components
 import LoginPage from './LoginPage'
@@ -119,6 +125,8 @@ function App() {
 
   // 2. Initialize the navigate function
   const navigate = useNavigate()
+
+  const location = useLocation()
 
   // This function is now ASYNCHRONOUS to work better with navigation
   // Wrap this function in useCallback
@@ -261,6 +269,21 @@ function App() {
     }
     fetchPRsForUser()
   }, [user])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const redirectPath = params.get('path')
+
+    if (redirectPath) {
+      // If a path was passed in the query, navigate to it,
+      // replacing the current history entry.
+      navigate('/' + redirectPath, { replace: true })
+    }
+    // The empty dependency array [] ensures this runs only once on mount.
+    // We disable the ESLint warning because we intentionally want this effect
+    // to not re-run when navigate or location change after the initial load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const groupedUsers = userList.reduce((acc, u) => {
     if (!acc[u.team]) acc[u.team] = []
