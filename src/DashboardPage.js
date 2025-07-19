@@ -3,8 +3,9 @@
 import React from 'react'
 import CounterButton from './CounterButton'
 import GitHubPRList from './GitHubPRList'
+import EditProfileForm from './EditProfileForm' // 1. Import our new component
 
-// This component also receives the state and handlers it needs as props
+// 2. Add `handleProfileUpdate` to the list of props
 function DashboardPage({
   user,
   handleLogout,
@@ -12,7 +13,8 @@ function DashboardPage({
   userNotes,
   noteDate,
   noteText,
-  handleNoteSubmit, // We'll create this handler in App.js
+  handleNoteSubmit,
+  handleProfileUpdate, // <-- ADD THIS PROP
   dispatch,
 }) {
   return (
@@ -116,6 +118,9 @@ function DashboardPage({
             </ul>
           )}
         </div>
+
+        {/* 3. Add the new EditProfileForm component as a third widget */}
+        <EditProfileForm user={user} onSave={handleProfileUpdate} />
       </div>
     </div>
   )
