@@ -1,13 +1,8 @@
-# 🔊 Echoboard – A Team Productivity Dashboard
+# 🔊 Echostatus – A Team Productivity Dashboard
 
-**Live Demo: [https://robertplaut.github.io/echoboard/](https://robertplaut.github.io/echoboard/)**
+**Live Demo: [https://robertplaut.github.io/echostatus/](https://robertplaut.github.io/echostatus/)**
 
 A responsive, single-page React application that provides a lightweight dashboard for team members to view their GitHub pull requests and log daily summary notes. All data is stored and synced via [Supabase](https://supabase.com).
-
-Official name: Echoboard
-- Use Echoboard when you write about the app.
-- Use EchoBoard as a strong candidate for your logo design.
-- Continue using echoboard for all your URLs, repo names, and other technical contexts.
 
 ---
 
@@ -42,8 +37,8 @@ Official name: Echoboard
 1.  **Clone this repo**:
 
     ```bash
-    git clone https://github.com/robertplaut/echoboard.git
-    cd echoboard
+    git clone https://github.com/robertplaut/echostatus.git
+    cd echostatus
     ```
 
 2.  **Install dependencies**:
@@ -65,7 +60,8 @@ Official name: Echoboard
         counter INT DEFAULT 0,
         team TEXT,
         role TEXT,
-        github_username TEXT
+        github_username TEXT,
+        email TEXT
       );
 
       -- Create the notes table
@@ -113,18 +109,18 @@ After logging in, the dashboard displays two main widgets. One fetches and displ
 ## 📦 Folder Structure
 
 ```text
-echoboard/
+echostatus/
 ├── public/
-│ └── index.html # Main HTML template, title, meta tags
+│   └── index.html         # Main HTML template, title, meta tags
 ├── src/
-│ ├── App.js # Main app logic and state
-│ ├── App.css # Global styling
-│ ├── CounterButton.js
-│ ├── githubApi.js # Logic for fetching from GitHub API
-│ ├── GitHubPRList.js # Component to display PRs
-│ ├── supabaseClient.js # Supabase configuration
-│ ├── ThemeToggle.js # The dark/light mode toggle component
-│ └── useTheme.js # The custom hook for theme logic
+│   ├── App.js             # Main app logic and state
+│   ├── App.css            # Global styling
+│   ├── CounterButton.js
+│   ├── githubApi.js       # Logic for fetching from GitHub API
+│   ├── GitHubPRList.js    # Component to display PRs
+│   ├── supabaseClient.js  # Supabase configuration
+│   ├── ThemeToggle.js     # The dark/light mode toggle component
+│   └── useTheme.js        # The custom hook for theme logic
 ├── package.json
 └── README.md
 ```
@@ -133,7 +129,8 @@ echoboard/
 
 ## 🚀 Possible Future Features
 
-- 🔑 Authentication via Supabase (email/password or GitHub OAuth) with Row Level Security.
+- 🔑 Authentication via Okta
+- 🔑 Supabase with Row Level Security.
 - 🗑️ Note editing and deleting functionality.
 - 📈 Team-level dashboards and aggregated stats.
 - 🤖 AI-powered daily email summaries for team leads.

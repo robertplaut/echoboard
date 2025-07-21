@@ -1,8 +1,8 @@
 {
-  "name": "echoboard",
+  "name": "echostatus",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://robertplaut.github.io/echoboard",
+  "homepage": "https://robertplaut.github.io/echostatus",
   "dependencies": {
     "@supabase/supabase-js": "^2.50.3",
     "@testing-library/dom": "^10.4.0",
