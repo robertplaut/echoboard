@@ -3,9 +3,8 @@
 import React from 'react'
 import CounterButton from './CounterButton'
 import GitHubPRList from './GitHubPRList'
-import EditProfileForm from './EditProfileForm' // 1. Import our new component
+import EditProfileForm from './EditProfileForm'
 
-// 2. Add `handleProfileUpdate` to the list of props
 function DashboardPage({
   user,
   handleLogout,
@@ -14,13 +13,13 @@ function DashboardPage({
   noteDate,
   noteText,
   handleNoteSubmit,
-  handleProfileUpdate, // <-- ADD THIS PROP
+  handleProfileUpdate,
   dispatch,
 }) {
   return (
     <div>
       <header className="app-header">
-        <h1>Welcome, {user.username}!</h1>
+        <h1>Welcome, {user.display_name}!</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <CounterButton
             label="Logout"
@@ -118,8 +117,6 @@ function DashboardPage({
             </ul>
           )}
         </div>
-
-        {/* 3. Add the new EditProfileForm component as a third widget */}
         <EditProfileForm user={user} onSave={handleProfileUpdate} />
       </div>
     </div>

@@ -22,6 +22,7 @@ const initialState = {
   user: null,
   userList: [],
   nameInput: '',
+  displayNameInput: '',
   email: '',
   newTeam: '',
   newRole: '',
@@ -40,6 +41,7 @@ function reducer(state, action) {
       return {
         ...state,
         nameInput: '',
+        displayNameInput: '',
         email: '',
         newTeam: '',
         newRole: '',
@@ -96,6 +98,7 @@ function App() {
     user,
     userList,
     nameInput,
+    displayNameInput,
     email,
     newTeam,
     newRole,
@@ -131,23 +134,40 @@ function App() {
 
   const handleCreateUser = async (e) => {
     e.preventDefault()
-    const newUsername = nameInput.trim()
+
+    // Sanitize the username: convert to lowercase and remove spaces/special chars.
+    const sanitizedUsername = nameInput
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '') // Allows letters, numbers, and hyphens
+    const newDisplayName = displayNameInput.trim()
     const newEmail = email.trim()
-    if (!newUsername || !newEmail || !newTeam || !newRole) {
-      alert('Please fill out all required fields.')
+
+    if (
+      !sanitizedUsername ||
+      !newDisplayName ||
+      !newEmail ||
+      !newTeam ||
+      !newRole
+    ) {
+      alert(
+        'Please fill out all required fields. Note that the username can only contain letters, numbers, and hyphens.'
+      )
       return
     }
+
     const { data: existingUser } = await supabase
       .from('users')
       .select('id')
-      .eq('username', newUsername)
+      .eq('username', sanitizedUsername)
       .single()
     if (existingUser) {
       alert('Username already exists. Choose another.')
       return
     }
     const newUser = {
-      username: newUsername,
+      username: sanitizedUsername, // Use the sanitized username for the database
+      display_name: newDisplayName,
       email: newEmail,
       team: newTeam,
       role: newRole,
@@ -167,13 +187,13 @@ function App() {
     navigate('/')
   }
 
-  // 2. Create the handleProfileUpdate function
   const handleProfileUpdate = async (formData) => {
     if (!user) return // Safety check
 
     const { data: updatedUser, error } = await supabase
       .from('users')
       .update({
+        display_name: formData.display_name,
         email: formData.email,
         team: formData.team,
         role: formData.role,
@@ -233,7 +253,7 @@ function App() {
       if (!user) {
         const { data, error } = await supabase
           .from('users')
-          .select('username, team, role, github_username, email')
+          .select('username, team, role, github_username, email, display_name')
           .order('username', { ascending: true })
         if (error) {
           console.error('Supabase fetch error:', error.message)
@@ -302,6 +322,7 @@ function App() {
               handleQuickLogin={handleQuickLogin}
               handleCreateUser={handleCreateUser}
               nameInput={nameInput}
+              displayNameInput={displayNameInput}
               email={email}
               newTeam={newTeam}
               newRole={newRole}

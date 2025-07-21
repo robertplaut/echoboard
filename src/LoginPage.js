@@ -8,6 +8,7 @@ function LoginPage({
   handleQuickLogin,
   handleCreateUser,
   nameInput,
+  displayNameInput,
   newTeam,
   newRole,
   githubUsername,
@@ -57,7 +58,7 @@ function LoginPage({
                       alt={userObj.username}
                       className="avatar-img"
                     />
-                    <div className="user-name">{userObj.username}</div>
+                    <div className="user-name">{userObj.display_name}</div>
                     <div className="user-role">{userObj.role}</div>
                   </Link>
                 ))}
@@ -77,11 +78,29 @@ function LoginPage({
         <h2>Create New User</h2>
         <form onSubmit={handleCreateUser}>
           <div className="form-group">
-            <label htmlFor="new-username">Username</label>
+            <label htmlFor="new-display-name">Display Name</label>
+            <input
+              id="new-display-name"
+              type="text"
+              placeholder="e.g., Jane Doe"
+              value={displayNameInput}
+              onChange={(e) =>
+                dispatch({
+                  type: 'SET_FIELD',
+                  field: 'displayNameInput',
+                  value: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="new-username">
+              Username (lowercase, no spaces/special characters)
+            </label>
             <input
               id="new-username"
               type="text"
-              placeholder="e.g., jane.doe"
+              placeholder="e.g., janedoe"
               value={nameInput}
               onChange={(e) =>
                 dispatch({
