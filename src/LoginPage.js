@@ -3,7 +3,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-// 1. Add `email` to the list of props this component receives
 function LoginPage({
   groupedUsers,
   handleQuickLogin,
@@ -12,14 +11,14 @@ function LoginPage({
   newTeam,
   newRole,
   githubUsername,
-  email, // <-- ADD THIS PROP
+  email,
   dispatch,
 }) {
   return (
     <div>
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '2.5rem', color: 'var(--color-dark)' }}>
-          Welcome to Echoboard
+          Welcome to Echostatus
         </h1>
         <p style={{ fontSize: '1.1rem', color: 'var(--color-text-secondary)' }}>
           Select a user to begin, or{' '}
@@ -30,7 +29,7 @@ function LoginPage({
         </p>
       </div>
 
-      {/* User Selection Grid (no changes here) */}
+      {/* User Selection Grid */}
       {Object.keys(groupedUsers).length > 0 ? (
         Object.keys(groupedUsers)
           .sort()
@@ -93,7 +92,6 @@ function LoginPage({
               }
             />
           </div>
-          {/* 2. Add the new form group for the Email field */}
           <div className="form-group">
             <label htmlFor="new-email">Email</label>
             <input

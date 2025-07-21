@@ -16,7 +16,7 @@ import { fetchPullRequests } from './githubApi'
 import './App.css'
 
 const GITHUB_OWNER = 'robertplaut'
-const GITHUB_REPO = 'echoboard'
+const GITHUB_REPO = 'echostatus'
 
 const initialState = {
   user: null,
