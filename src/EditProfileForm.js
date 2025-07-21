@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react'
 function EditProfileForm({ user, onSave }) {
   // 1. This component manages its own form state
   const [formData, setFormData] = useState({
+    display_name: '',
     email: '',
     team: '',
     role: '',
@@ -15,6 +16,7 @@ function EditProfileForm({ user, onSave }) {
   useEffect(() => {
     if (user) {
       setFormData({
+        display_name: user.display_name || '',
         email: user.email || '',
         team: user.team || '',
         role: user.role || '',
@@ -48,6 +50,16 @@ function EditProfileForm({ user, onSave }) {
     <div className="widget-card">
       <h2>Edit Profile</h2>
       <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="display_name">Display Name</label>
+          <input
+            id="display_name"
+            name="display_name" // This name must match the state property
+            type="text"
+            value={formData.display_name}
+            onChange={handleChange}
+          />
+        </div>
         <div className="form-group">
           <label htmlFor="username">Username (cannot be changed)</label>
           <input
