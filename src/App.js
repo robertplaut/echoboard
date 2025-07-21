@@ -214,6 +214,28 @@ function App() {
     alert('Profile updated successfully!')
   }
 
+  const handleSaveSelection = async (selectedIds) => {
+    if (!user) return // Safety check
+
+    const { data: updatedUser, error } = await supabase
+      .from('users')
+      .update({ selected_user_ids: selectedIds })
+      .eq('id', user.id)
+      .select() // Re-fetch the user data to get the latest selection
+      .single()
+
+    if (error) {
+      alert('Failed to save selection.')
+      console.error('Update error:', error)
+      return
+    }
+
+    // We can reuse the existing UPDATE_USER_SUCCESS action
+    // to refresh the user state with the new selections.
+    dispatch({ type: 'UPDATE_USER_SUCCESS', payload: updatedUser })
+    alert('Selection saved successfully!')
+  }
+
   const fetchNotesForUser = async (userId) => {
     if (!userId) return []
     const { data, error } = await supabase
@@ -250,20 +272,23 @@ function App() {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      if (!user) {
-        const { data, error } = await supabase
-          .from('users')
-          .select('username, team, role, github_username, email, display_name')
-          .order('username', { ascending: true })
-        if (error) {
-          console.error('Supabase fetch error:', error.message)
-        } else {
-          dispatch({ type: 'SET_USER_LIST', payload: data })
-        }
+      // We now fetch all users when the app loads, not just on the login page.
+      // We also crucially add 'id' to the select query.
+      const { data, error } = await supabase
+        .from('users')
+        .select(
+          'id, username, team, role, github_username, email, display_name'
+        )
+        .order('display_name', { ascending: true }) // Let's sort by display_name now
+
+      if (error) {
+        console.error('Supabase fetch error:', error.message)
+      } else {
+        dispatch({ type: 'SET_USER_LIST', payload: data })
       }
     }
     fetchUsers()
-  }, [user])
+  }, []) // An empty dependency array ensures this runs only once on mount.
 
   useEffect(() => {
     const fetchPRsForUser = async () => {
@@ -336,10 +361,12 @@ function App() {
           element={
             <DashboardWrapper
               user={user}
+              userList={userList}
               handleQuickLogin={handleQuickLogin}
               handleLogout={handleLogout}
               // 3. Pass the new handler function down as a prop
               handleProfileUpdate={handleProfileUpdate}
+              handleSaveSelection={handleSaveSelection}
               userPullRequests={userPullRequests}
               userNotes={userNotes}
               noteDate={noteDate}

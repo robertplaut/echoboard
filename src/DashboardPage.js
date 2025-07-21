@@ -4,9 +4,11 @@ import React from 'react'
 import CounterButton from './CounterButton'
 import GitHubPRList from './GitHubPRList'
 import EditProfileForm from './EditProfileForm'
+import SummaryAggregator from './SummaryAggregator'
 
 function DashboardPage({
   user,
+  userList,
   handleLogout,
   userPullRequests,
   userNotes,
@@ -14,6 +16,7 @@ function DashboardPage({
   noteText,
   handleNoteSubmit,
   handleProfileUpdate,
+  handleSaveSelection,
   dispatch,
 }) {
   return (
@@ -118,6 +121,12 @@ function DashboardPage({
           )}
         </div>
         <EditProfileForm user={user} onSave={handleProfileUpdate} />
+
+        <SummaryAggregator
+          user={user}
+          userList={userList}
+          onSaveSelection={handleSaveSelection}
+        />
       </div>
     </div>
   )
