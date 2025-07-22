@@ -11,6 +11,7 @@ import {
 import LoginPage from './LoginPage'
 import DashboardPage from './DashboardPage'
 import ThemeToggle from './ThemeToggle'
+import BackToTopButton from './BackToTopButton'
 import supabase from './supabaseClient'
 import { fetchPullRequests } from './githubApi'
 import { useToast } from './ToastContext'
@@ -383,6 +384,8 @@ function App() {
           }
         />
       </Routes>
+
+      <BackToTopButton />
     </div>
   )
 }
