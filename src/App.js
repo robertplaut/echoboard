@@ -31,7 +31,11 @@ const initialState = {
   githubUsername: '',
   userPullRequests: [],
   noteDate: new Date().toISOString().split('T')[0],
-  noteText: '',
+  // The old `noteText` is replaced by four new fields
+  yesterdayText: '',
+  todayText: '',
+  blockersText: '',
+  learningsText: '',
   userNotes: [],
 }
 
@@ -41,14 +45,14 @@ function reducer(state, action) {
       return { ...state, [action.field]: action.value }
     case 'CREATE_USER_SUCCESS':
       return {
-        ...state,
+        ...state, // <-- Make sure this is here
         nameInput: '',
         displayNameInput: '',
         email: '',
         newTeam: '',
         newRole: '',
         githubUsername: '',
-        userList: [...state.userList, action.payload],
+        userList: [...state.userList, action.payload], // <-- And this
       }
     case 'LOGIN_SUCCESS':
       return { ...state, user: action.payload }
@@ -63,18 +67,25 @@ function reducer(state, action) {
     case 'SUBMIT_NOTE_SUCCESS':
       return {
         ...state,
-        noteText: '',
+        // Clear the four new fields on successful submission
+        yesterdayText: '',
+        todayText: '',
+        blockersText: '',
+        learningsText: '',
         noteDate: new Date().toISOString().split('T')[0],
         userNotes: action.payload,
       }
-
-    // 1. Add the new reducer case for a successful profile update
     case 'UPDATE_USER_SUCCESS':
+      // When a single user is updated, we need to update BOTH the `user` object
+      // for the logged-in user, AND that user's entry in the `userList`.
       return {
         ...state,
-        user: action.payload, // Update the logged-in user's data
+        user: action.payload, // Update the currently logged-in user's data
+        // Find the user in the list and replace them with the updated data
+        userList: state.userList.map((u) =>
+          u.id === action.payload.id ? action.payload : u
+        ),
       }
-
     default:
       return state
   }
@@ -96,6 +107,7 @@ function DashboardWrapper(props) {
 
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
+
   const {
     user,
     userList,
@@ -107,7 +119,11 @@ function App() {
     githubUsername,
     userPullRequests,
     noteDate,
-    noteText,
+    // Destructure our four new state variables instead of noteText
+    yesterdayText,
+    todayText,
+    blockersText,
+    learningsText,
     userNotes,
   } = state
 
@@ -246,9 +262,12 @@ function App() {
     if (!userId) return []
     const { data, error } = await supabase
       .from('notes')
-      .select('id, date, note_text, created_at')
+      // Select the new structured columns
+      .select(
+        'id, date, created_at, yesterday_text, today_text, blockers_text, learnings_text'
+      )
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+      .order('date', { ascending: false }) // Sort by the note's date
     if (error) {
       console.error('Error fetching notes:', error)
       return []
@@ -258,24 +277,107 @@ function App() {
 
   const handleNoteSubmit = async (e) => {
     e.preventDefault()
-    if (!noteText.trim()) {
-      addToast('Please enter a note before submitting.', 'error')
+    const yesterday = yesterdayText.trim()
+    const today = todayText.trim()
+    const blockers = blockersText.trim()
+    const learnings = learningsText.trim()
+
+    // Validation: Ensure at least one field is filled out.
+    if (!yesterday && !today && !blockers && !learnings) {
+      addToast('Please fill out at least one field to save a note.', 'error')
       return
     }
-    const { error } = await supabase
+
+    // "Upsert" logic: Check if a note for this user and date already exists.
+    const { data: existingNote, error: fetchError } = await supabase
       .from('notes')
-      .insert([
-        { user_id: user.id, date: noteDate, note_text: noteText.trim() },
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('date', noteDate)
+      .single()
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      // PGRST116 means "No rows found", which is not an error for us.
+      console.error('Error checking for existing note:', fetchError)
+      addToast('Error saving note.', 'error')
+      return
+    }
+
+    let error
+
+    if (existingNote) {
+      // If a note exists, UPDATE it.
+      const { error: updateError } = await supabase
+        .from('notes')
+        .update({
+          yesterday_text: yesterday,
+          today_text: today,
+          blockers_text: blockers,
+          learnings_text: learnings,
+        })
+        .eq('id', existingNote.id)
+      error = updateError
+    } else {
+      // If no note exists, INSERT a new one.
+      const { error: insertError } = await supabase.from('notes').insert([
+        {
+          user_id: user.id,
+          date: noteDate,
+          yesterday_text: yesterday,
+          today_text: today,
+          blockers_text: blockers,
+          learnings_text: learnings,
+        },
       ])
+      error = insertError
+    }
+
     if (error) {
       addToast('Failed to save note.', 'error')
-      console.error('Insert error:', error)
+      console.error('Save error:', error)
       return
     }
+
     const updatedNotes = await fetchNotesForUser(user.id)
     dispatch({ type: 'SUBMIT_NOTE_SUCCESS', payload: updatedNotes })
-    addToast('Note saved!', 'success')
+    addToast('Note saved successfully!', 'success')
   }
+
+  // This effect pre-fills the note form when the date changes
+  useEffect(() => {
+    // Find a note in our userNotes array that matches the selected date
+    const noteForSelectedDate = userNotes.find((note) => note.date === noteDate)
+
+    // If a note is found, fill the form fields with its data
+    if (noteForSelectedDate) {
+      dispatch({
+        type: 'SET_FIELD',
+        field: 'yesterdayText',
+        value: noteForSelectedDate.yesterday_text || '',
+      })
+      dispatch({
+        type: 'SET_FIELD',
+        field: 'todayText',
+        value: noteForSelectedDate.today_text || '',
+      })
+      dispatch({
+        type: 'SET_FIELD',
+        field: 'blockersText',
+        value: noteForSelectedDate.blockers_text || '',
+      })
+      dispatch({
+        type: 'SET_FIELD',
+        field: 'learningsText',
+        value: noteForSelectedDate.learnings_text || '',
+      })
+    } else {
+      // If no note is found for that date, clear the form fields
+      dispatch({ type: 'SET_FIELD', field: 'yesterdayText', value: '' })
+      dispatch({ type: 'SET_FIELD', field: 'todayText', value: '' })
+      dispatch({ type: 'SET_FIELD', field: 'blockersText', value: '' })
+      dispatch({ type: 'SET_FIELD', field: 'learningsText', value: '' })
+    }
+  }, [noteDate, userNotes]) // Re-run this effect when the date or notes list changes
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -327,11 +429,14 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const groupedUsers = userList.reduce((acc, u) => {
-    if (!acc[u.team]) acc[u.team] = []
-    acc[u.team].push(u)
-    return acc
-  }, {})
+  // Add a defensive check: only run reduce if userList is an array.
+  const groupedUsers = Array.isArray(userList)
+    ? userList.reduce((acc, u) => {
+        if (!acc[u.team]) acc[u.team] = []
+        acc[u.team].push(u)
+        return acc
+      }, {})
+    : {} // If userList isn't an array, default to an empty object.
 
   return (
     <div className="app-container">
@@ -377,7 +482,10 @@ function App() {
               userPullRequests={userPullRequests}
               userNotes={userNotes}
               noteDate={noteDate}
-              noteText={noteText}
+              yesterdayText={yesterdayText}
+              todayText={todayText}
+              blockersText={blockersText}
+              learningsText={learningsText}
               handleNoteSubmit={handleNoteSubmit}
               dispatch={dispatch}
             />
