@@ -197,7 +197,7 @@ function App() {
         email: formData.email,
         team: formData.team,
         role: formData.role,
-        github_username: formData.github_username,
+        github_username: formData.github_username || null,
       })
       .eq('id', user.id)
       .select() // Use .select() to get the updated row back from the database
