@@ -12,7 +12,7 @@ export const useTheme = () => {
   // 2. An effect that runs when the theme state changes
   useEffect(() => {
     // Set the data-theme attribute on the body element
-    document.body.setAttribute('data-theme', theme)
+    document.documentElement.setAttribute('data-theme', theme)
 
     // Save the user's preference to localStorage
     window.localStorage.setItem('theme', theme)
