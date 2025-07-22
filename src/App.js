@@ -13,6 +13,7 @@ import DashboardPage from './DashboardPage'
 import ThemeToggle from './ThemeToggle'
 import supabase from './supabaseClient'
 import { fetchPullRequests } from './githubApi'
+import { useToast } from './ToastContext'
 import './App.css'
 
 const GITHUB_OWNER = 'robertplaut'
@@ -111,6 +112,7 @@ function App() {
 
   const navigate = useNavigate()
   const location = useLocation()
+  const { addToast } = useToast()
 
   const handleQuickLogin = useCallback(
     async (username) => {
@@ -120,7 +122,7 @@ function App() {
         .eq('username', username)
         .single()
       if (error || !userData) {
-        alert('Error logging in')
+        addToast('Error logging in. Please try again.', 'error')
         navigate('/')
         return
       }
@@ -129,7 +131,7 @@ function App() {
       dispatch({ type: 'SET_NOTES', payload: notes })
       navigate(`/user/${userData.username}`)
     },
-    [navigate]
+    [navigate, addToast]
   )
 
   const handleCreateUser = async (e) => {
@@ -150,8 +152,10 @@ function App() {
       !newTeam ||
       !newRole
     ) {
-      alert(
-        'Please fill out all required fields. Note that the username can only contain letters, numbers, and hyphens.'
+      addToast(
+        'Please fill out all required fields. Note that the username can only contain letters, numbers, and hyphens.',
+        'error',
+        'Validation Error'
       )
       return
     }
@@ -162,7 +166,7 @@ function App() {
       .eq('username', sanitizedUsername)
       .single()
     if (existingUser) {
-      alert('Username already exists. Choose another.')
+      addToast('Username already exists. Please choose another.', 'error')
       return
     }
     const newUser = {
@@ -175,11 +179,12 @@ function App() {
     }
     const { error } = await supabase.from('users').insert([newUser])
     if (error) {
-      alert('Error creating user.')
+      addToast('Error creating user.', 'error')
       console.error('Insert error:', error)
       return
     }
     dispatch({ type: 'CREATE_USER_SUCCESS', payload: newUser })
+    addToast('User successfully created!', 'success')
   }
 
   const handleLogout = () => {
@@ -204,14 +209,14 @@ function App() {
       .single()
 
     if (error) {
-      alert('Failed to update profile.')
+      addToast('Failed to update profile.', 'error')
       console.error('Update error:', error)
       return
     }
 
     // Dispatch an action with the updated user data to refresh the UI
     dispatch({ type: 'UPDATE_USER_SUCCESS', payload: updatedUser })
-    alert('Profile updated successfully!')
+    addToast('Profile updated successfully!', 'success')
   }
 
   const handleSaveSelection = async (selectedIds) => {
@@ -225,7 +230,7 @@ function App() {
       .single()
 
     if (error) {
-      alert('Failed to save selection.')
+      addToast('Failed to save selection.', 'error')
       console.error('Update error:', error)
       return
     }
@@ -233,7 +238,7 @@ function App() {
     // We can reuse the existing UPDATE_USER_SUCCESS action
     // to refresh the user state with the new selections.
     dispatch({ type: 'UPDATE_USER_SUCCESS', payload: updatedUser })
-    alert('Selection saved successfully!')
+    addToast('Selection saved successfully!', 'success')
   }
 
   const fetchNotesForUser = async (userId) => {
@@ -253,7 +258,7 @@ function App() {
   const handleNoteSubmit = async (e) => {
     e.preventDefault()
     if (!noteText.trim()) {
-      alert('Please enter a note before submitting.')
+      addToast('Please enter a note before submitting.', 'error')
       return
     }
     const { error } = await supabase
@@ -262,12 +267,13 @@ function App() {
         { user_id: user.id, date: noteDate, note_text: noteText.trim() },
       ])
     if (error) {
-      alert('Failed to save note.')
+      addToast('Failed to save note.', 'error')
       console.error('Insert error:', error)
       return
     }
     const updatedNotes = await fetchNotesForUser(user.id)
     dispatch({ type: 'SUBMIT_NOTE_SUCCESS', payload: updatedNotes })
+    addToast('Note saved!', 'success')
   }
 
   useEffect(() => {
