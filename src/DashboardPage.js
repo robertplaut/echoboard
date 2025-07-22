@@ -13,7 +13,10 @@ function DashboardPage({
   userPullRequests,
   userNotes,
   noteDate,
-  noteText,
+  yesterdayText, // <-- ADD
+  todayText, // <-- ADD
+  blockersText, // <-- ADD
+  learningsText, // <-- ADD
   handleNoteSubmit,
   handleProfileUpdate,
   handleSaveSelection,
@@ -40,7 +43,7 @@ function DashboardPage({
 
         {/* --- Summary Notes Widget --- */}
         <div className="widget-card">
-          <h2>📝 Add Summary Note</h2>
+          <h2>📝 Daily Standup Note</h2>
           <form onSubmit={handleNoteSubmit}>
             <div className="form-group">
               <label htmlFor="note-date">Date</label>
@@ -57,19 +60,72 @@ function DashboardPage({
                 }
               />
             </div>
+            {/* Yesterday */}
             <div className="form-group">
-              <label htmlFor="note-text">Notes</label>
+              <label htmlFor="yesterday-text">
+                What did you accomplish yesterday?
+              </label>
               <textarea
-                id="note-text"
-                value={noteText}
+                id="yesterday-text"
+                value={yesterdayText}
                 onChange={(e) =>
                   dispatch({
                     type: 'SET_FIELD',
-                    field: 'noteText',
+                    field: 'yesterdayText',
                     value: e.target.value,
                   })
                 }
-                rows="4"
+                rows="3"
+              />
+            </div>
+            {/* Today */}
+            <div className="form-group">
+              <label htmlFor="today-text">What are you working on today?</label>
+              <textarea
+                id="today-text"
+                value={todayText}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'todayText',
+                    value: e.target.value,
+                  })
+                }
+                rows="3"
+              />
+            </div>
+            {/* Blockers */}
+            <div className="form-group">
+              <label htmlFor="blockers-text">Do you have any blockers?</label>
+              <textarea
+                id="blockers-text"
+                value={blockersText}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'blockersText',
+                    value: e.target.value,
+                  })
+                }
+                rows="2"
+              />
+            </div>
+            {/* Learnings */}
+            <div className="form-group">
+              <label htmlFor="learnings-text">
+                Learnings / Other Notes (optional)
+              </label>
+              <textarea
+                id="learnings-text"
+                value={learningsText}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'learningsText',
+                    value: e.target.value,
+                  })
+                }
+                rows="2"
               />
             </div>
             <button type="submit" className="btn">
@@ -80,43 +136,101 @@ function DashboardPage({
           <hr />
 
           <h3>Submitted Notes</h3>
-          {Array.isArray(userNotes) && userNotes.length === 0 ? (
+          {userNotes.length === 0 ? (
             <p>No notes yet.</p>
           ) : (
             <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
-              {(Array.isArray(userNotes) ? [...userNotes] : [])
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .map((note) => (
-                  <li
-                    key={note.id}
+              {userNotes.map((note) => (
+                <li
+                  key={note.id}
+                  style={{
+                    marginBottom: '1rem',
+                    padding: '1rem',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '8px',
+                    backgroundColor: 'var(--color-background)',
+                  }}
+                >
+                  <div
                     style={{
-                      marginBottom: '1rem',
-                      padding: '1rem',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: '8px',
-                      backgroundColor: 'var(--color-background)',
+                      fontSize: '1em',
+                      color: 'var(--color-dark)',
+                      fontWeight: '700',
+                      marginBottom: '0.75rem',
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: '0.9em',
-                        color: 'var(--color-text-secondary)',
-                        fontWeight: '500',
-                      }}
-                    >
-                      {new Date(note.created_at).toLocaleDateString()}
+                    {new Date(note.date + 'T00:00:00').toLocaleDateString(
+                      'en-US',
+                      {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        timeZone: 'UTC', // Ensure consistent date formatting
+                      }
+                    )}
+                  </div>
+                  {note.yesterday_text && (
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong style={{ color: 'var(--color-text-secondary)' }}>
+                        Yesterday:
+                      </strong>
+                      <div
+                        style={{
+                          whiteSpace: 'pre-wrap',
+                          color: 'var(--color-text-primary)',
+                        }}
+                      >
+                        {note.yesterday_text}
+                      </div>
                     </div>
-                    <div
-                      style={{
-                        whiteSpace: 'pre-wrap',
-                        marginTop: '0.5rem',
-                        color: 'var(--color-text-primary)',
-                      }}
-                    >
-                      {note.note_text}
+                  )}
+                  {note.today_text && (
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong style={{ color: 'var(--color-text-secondary)' }}>
+                        Today:
+                      </strong>
+                      <div
+                        style={{
+                          whiteSpace: 'pre-wrap',
+                          color: 'var(--color-text-primary)',
+                        }}
+                      >
+                        {note.today_text}
+                      </div>
                     </div>
-                  </li>
-                ))}
+                  )}
+                  {note.blockers_text && (
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong style={{ color: 'var(--color-text-secondary)' }}>
+                        Blocker(s):
+                      </strong>
+                      <div
+                        style={{
+                          whiteSpace: 'pre-wrap',
+                          color: 'var(--color-text-primary)',
+                        }}
+                      >
+                        {note.blockers_text}
+                      </div>
+                    </div>
+                  )}
+                  {note.learnings_text && (
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong style={{ color: 'var(--color-text-secondary)' }}>
+                        Learning(s):
+                      </strong>
+                      <div
+                        style={{
+                          whiteSpace: 'pre-wrap',
+                          color: 'var(--color-text-primary)',
+                        }}
+                      >
+                        {note.learnings_text}
+                      </div>
+                    </div>
+                  )}
+                </li>
+              ))}
             </ul>
           )}
         </div>
