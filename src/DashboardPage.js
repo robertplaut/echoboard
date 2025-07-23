@@ -283,7 +283,7 @@ function DashboardPage({
 
         {/* --- Aggregated Summary View Widget --- */}
         <div className="widget-card">
-          <AggregatedSummary user={user} />
+          <AggregatedSummary user={user} userNotes={userNotes} />
         </div>
 
         <SummaryAggregator

@@ -247,27 +247,28 @@ function App() {
     addToast("Profile updated successfully!", "success");
   };
 
-  const handleSaveSelection = async (selectedIds) => {
-    if (!user) return; // Safety check
+  const handleSaveSelection = useCallback(
+    async (selectedIds) => {
+      if (!user) return;
 
-    const { data: updatedUser, error } = await supabase
-      .from("users")
-      .update({ selected_user_ids: selectedIds })
-      .eq("id", user.id)
-      .select() // Re-fetch the user data to get the latest selection
-      .single();
+      const { data: updatedUser, error } = await supabase
+        .from("users")
+        .update({ selected_user_ids: selectedIds })
+        .eq("id", user.id)
+        .select()
+        .single();
 
-    if (error) {
-      addToast("Failed to save selection.", "error");
-      console.error("Update error:", error);
-      return;
-    }
+      if (error) {
+        addToast("Failed to save selection.", "error");
+        console.error("Update error:", error);
+        return;
+      }
 
-    // We can reuse the existing UPDATE_USER_SUCCESS action
-    // to refresh the user state with the new selections.
-    dispatch({ type: "UPDATE_USER_SUCCESS", payload: updatedUser });
-    addToast("Selection saved successfully!", "success");
-  };
+      dispatch({ type: "UPDATE_USER_SUCCESS", payload: updatedUser });
+      addToast("Selection saved automatically!", "success"); // Toast is back
+    },
+    [user, addToast]
+  );
 
   const fetchNotesForUser = async (userId) => {
     if (!userId) return [];
