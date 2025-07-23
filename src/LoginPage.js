@@ -1,7 +1,7 @@
 // src/LoginPage.js
 
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React from "react";
+import { Link } from "react-router-dom";
 
 function LoginPage({
   groupedUsers,
@@ -17,13 +17,13 @@ function LoginPage({
 }) {
   return (
     <div>
-      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-        <h1 style={{ fontSize: '2.5rem', color: 'var(--color-dark)' }}>
+      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+        <h1 style={{ fontSize: "2.5rem", color: "var(--color-dark)" }}>
           Welcome to Echostatus
         </h1>
-        <p style={{ fontSize: '1.1rem', color: 'var(--color-text-secondary)' }}>
-          Select a user to begin, or{' '}
-          <a href="#create-user-form" style={{ color: 'var(--color-primary)' }}>
+        <p style={{ fontSize: "1.1rem", color: "var(--color-text-secondary)" }}>
+          Select a user to begin, or{" "}
+          <a href="#create-user-form" style={{ color: "var(--color-primary)" }}>
             create a new user below
           </a>
           .
@@ -35,23 +35,23 @@ function LoginPage({
         Object.keys(groupedUsers)
           .sort()
           .map((team) => (
-            <div key={team} style={{ marginBottom: '3rem' }}>
+            <div key={team} style={{ marginBottom: "3rem" }}>
               <h2
                 style={{
-                  fontSize: '1.5rem',
-                  paddingBottom: '0.5rem',
-                  borderBottom: '1px solid var(--color-border)',
+                  fontSize: "1.5rem",
+                  paddingBottom: "0.5rem",
+                  borderBottom: "1px solid var(--color-border)",
                 }}
               >
                 {team}
               </h2>
-              <div className="user-card-grid" style={{ marginTop: '1.5rem' }}>
+              <div className="user-card-grid" style={{ marginTop: "1.5rem" }}>
                 {groupedUsers[team].map((userObj) => (
                   <Link
                     key={userObj.username}
                     to={`/user/${userObj.username}`}
                     className="user-card"
-                    style={{ textDecoration: 'none' }}
+                    style={{ textDecoration: "none" }}
                   >
                     <img
                       src={`https://api.dicebear.com/6.x/thumbs/svg?seed=${userObj.username}`}
@@ -66,7 +66,7 @@ function LoginPage({
             </div>
           ))
       ) : (
-        <p style={{ textAlign: 'center' }}>
+        <p style={{ textAlign: "center" }}>
           No users found. Please create one to get started.
         </p>
       )}
@@ -78,7 +78,7 @@ function LoginPage({
         <h2>Create New User</h2>
         <form onSubmit={handleCreateUser}>
           <div className="form-group">
-            <label htmlFor="new-display-name">Display Name</label>
+            <label htmlFor="new-display-name">Display Name *</label>
             <input
               id="new-display-name"
               type="text"
@@ -86,8 +86,8 @@ function LoginPage({
               value={displayNameInput}
               onChange={(e) =>
                 dispatch({
-                  type: 'SET_FIELD',
-                  field: 'displayNameInput',
+                  type: "SET_FIELD",
+                  field: "displayNameInput",
                   value: e.target.value,
                 })
               }
@@ -95,7 +95,8 @@ function LoginPage({
           </div>
           <div className="form-group">
             <label htmlFor="new-username">
-              Username (lowercase, no spaces/special characters)
+              Username (Must be lowercase with no spaces or special characters,
+              will be used for URL path) *
             </label>
             <input
               id="new-username"
@@ -104,15 +105,15 @@ function LoginPage({
               value={nameInput}
               onChange={(e) =>
                 dispatch({
-                  type: 'SET_FIELD',
-                  field: 'nameInput',
+                  type: "SET_FIELD",
+                  field: "nameInput",
                   value: e.target.value,
                 })
               }
             />
           </div>
           <div className="form-group">
-            <label htmlFor="new-email">Email</label>
+            <label htmlFor="new-email">Email *</label>
             <input
               id="new-email"
               type="email" // Using type="email" gives basic browser validation
@@ -120,22 +121,22 @@ function LoginPage({
               value={email}
               onChange={(e) =>
                 dispatch({
-                  type: 'SET_FIELD',
-                  field: 'email',
+                  type: "SET_FIELD",
+                  field: "email",
                   value: e.target.value,
                 })
               }
             />
           </div>
           <div className="form-group">
-            <label htmlFor="new-team">Team</label>
+            <label htmlFor="new-team">Team *</label>
             <select
               id="new-team"
               value={newTeam}
               onChange={(e) =>
                 dispatch({
-                  type: 'SET_FIELD',
-                  field: 'newTeam',
+                  type: "SET_FIELD",
+                  field: "newTeam",
                   value: e.target.value,
                 })
               }
@@ -147,14 +148,14 @@ function LoginPage({
             </select>
           </div>
           <div className="form-group">
-            <label htmlFor="new-role">Role</label>
+            <label htmlFor="new-role">Role *</label>
             <select
               id="new-role"
               value={newRole}
               onChange={(e) =>
                 dispatch({
-                  type: 'SET_FIELD',
-                  field: 'newRole',
+                  type: "SET_FIELD",
+                  field: "newRole",
                   value: e.target.value,
                 })
               }
@@ -181,8 +182,8 @@ function LoginPage({
               value={githubUsername}
               onChange={(e) =>
                 dispatch({
-                  type: 'SET_FIELD',
-                  field: 'githubUsername',
+                  type: "SET_FIELD",
+                  field: "githubUsername",
                   value: e.target.value,
                 })
               }
@@ -194,7 +195,7 @@ function LoginPage({
         </form>
       </div>
     </div>
-  )
+  );
 }
 
-export default LoginPage
+export default LoginPage;
