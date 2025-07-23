@@ -5,6 +5,7 @@ import CounterButton from "./CounterButton";
 import GitHubPRList from "./GitHubPRList";
 import EditProfileForm from "./EditProfileForm";
 import SummaryAggregator from "./SummaryAggregator";
+import AggregatedSummary from "./AggregatedSummary";
 
 function DashboardPage({
   user,
@@ -279,6 +280,12 @@ function DashboardPage({
 
         {/* --- Edit Profile & Summary Aggregator Widgets --- */}
         <EditProfileForm user={user} onSave={handleProfileUpdate} />
+
+        {/* --- Aggregated Summary View Widget --- */}
+        <div className="widget-card">
+          <AggregatedSummary user={user} />
+        </div>
+
         <SummaryAggregator
           user={user}
           userList={userList}

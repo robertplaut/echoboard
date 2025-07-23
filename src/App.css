@@ -194,3 +194,38 @@ hr {
   padding-right: 1rem; /* Add some space so the scrollbar doesn't hug the content */
   margin-right: -1rem; /* Offset the padding to maintain alignment */
 }
+
+/* Styles for Toggle Switch / Segmented Control */
+.toggle-switch-container {
+  display: flex;
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden; /* This keeps the corners rounded */
+}
+
+.toggle-switch-button {
+  flex: 1; /* Each button takes up an equal amount of space */
+  padding: 0.75rem 0.5rem;
+  border: none;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  border-right: 1px solid var(--color-border);
+}
+
+.toggle-switch-button:last-child {
+  border-right: none; /* Remove border from the last button */
+}
+
+.toggle-switch-button.active {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.toggle-switch-button:not(.active):hover {
+  background-color: var(--color-background);
+}
