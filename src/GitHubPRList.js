@@ -18,7 +18,9 @@ const GitHubPRList = ({ pullRequests }) => {
   if (!pullRequests || pullRequests.length === 0) {
     return (
       <div>
-        <h2>GitHub Pull Requests</h2>
+        <div className="widget-header">
+          <h2>GitHub Pull Requests</h2>
+        </div>
         <p>No pull requests found for this user.</p>
       </div>
     );
@@ -26,7 +28,9 @@ const GitHubPRList = ({ pullRequests }) => {
 
   return (
     <div>
-      <h2>GitHub Pull Requests</h2>
+      <div className="widget-header">
+        <h2>GitHub Pull Requests</h2>
+      </div>
       <div className="widget-scroll-container">
         <ul style={{ listStyle: "none", padding: 0 }}>
           {pullRequests.map((pr) => {

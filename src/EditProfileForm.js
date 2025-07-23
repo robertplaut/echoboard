@@ -1,54 +1,56 @@
 // src/EditProfileForm.js
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from "react";
 
 function EditProfileForm({ user, onSave }) {
   // 1. This component manages its own form state
   const [formData, setFormData] = useState({
-    display_name: '',
-    email: '',
-    team: '',
-    role: '',
-    github_username: '',
-  })
+    display_name: "",
+    email: "",
+    team: "",
+    role: "",
+    github_username: "",
+  });
 
   // 2. When the `user` prop changes, pre-fill the form
   useEffect(() => {
     if (user) {
       setFormData({
-        display_name: user.display_name || '',
-        email: user.email || '',
-        team: user.team || '',
-        role: user.role || '',
-        github_username: user.github_username || '',
-      })
+        display_name: user.display_name || "",
+        email: user.email || "",
+        team: user.team || "",
+        role: user.role || "",
+        github_username: user.github_username || "",
+      });
     }
-  }, [user])
+  }, [user]);
 
   // 3. A single handler to update any field in the form state
   const handleChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     // 4. When the form is submitted, call the onSave function from props,
     // passing the current form data up to the parent.
-    onSave(formData)
-  }
+    onSave(formData);
+  };
 
   // Don't render the form if there's no user data yet
   if (!user) {
-    return null
+    return null;
   }
 
   return (
     <div className="widget-card">
-      <h2>Edit Profile</h2>
+      <div className="widget-header">
+        <h2>Edit Profile</h2>
+      </div>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="display_name">Display Name</label>
@@ -67,7 +69,7 @@ function EditProfileForm({ user, onSave }) {
             type="text"
             value={user.username}
             disabled // The username is read-only
-            style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed' }}
+            style={{ backgroundColor: "#e9ecef", cursor: "not-allowed" }}
           />
         </div>
         <div className="form-group">
@@ -128,7 +130,7 @@ function EditProfileForm({ user, onSave }) {
         </button>
       </form>
     </div>
-  )
+  );
 }
 
-export default EditProfileForm
+export default EditProfileForm;

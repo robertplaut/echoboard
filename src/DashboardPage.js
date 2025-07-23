@@ -38,7 +38,9 @@ function DashboardPage({
       <div className="dashboard-grid">
         {/* --- Daily Standup Note FORM Widget --- */}
         <div className="widget-card">
-          <h2>📝 Daily Standup Note</h2>
+          <div className="widget-header">
+            <h2>📝 Daily Standup Note</h2>
+          </div>
           <form onSubmit={handleNoteSubmit}>
             <div className="form-group">
               <label htmlFor="note-date">Date</label>
@@ -147,7 +149,9 @@ function DashboardPage({
 
         {/* --- Past Notes LIST Widget --- */}
         <div className="widget-card">
-          <h2>Past Notes</h2>
+          <div className="widget-header">
+            <h2>Past Notes</h2>
+          </div>
           <div className="widget-scroll-container">
             {userNotes.length === 0 ? (
               <p>No notes yet.</p>
