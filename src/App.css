@@ -64,16 +64,16 @@
   color: var(--color-text-primary);
 }
 
-input[type='text'],
-input[type='date'],
-input[type='email'],
+input[type="text"],
+input[type="date"],
+input[type="email"],
 select,
 textarea {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 1rem;
   box-sizing: border-box; /* Important for width: 100% */
 }
@@ -163,4 +163,13 @@ hr {
   height: 1px;
   background-color: var(--color-border);
   margin: 2rem 0;
+}
+
+/* Utility Class for Scrollable Widget Content */
+
+.widget-scroll-container {
+  max-height: 850px; /* Adjust this value as needed */
+  overflow-y: auto; /* Show a vertical scrollbar only when content overflows */
+  padding-right: 1rem; /* Add some space so the scrollbar doesn't hug the content */
+  margin-right: -1rem; /* Offset the padding to maintain alignment */
 }
