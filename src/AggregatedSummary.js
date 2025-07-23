@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import supabase from "./supabaseClient";
 
 // This component now ONLY needs the logged-in user's data
-const AggregatedSummary = ({ user }) => {
+const AggregatedSummary = ({ user, userNotes }) => {
   const [activeToggle, setActiveToggle] = useState("Today");
   const [notes, setNotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,7 +63,7 @@ const AggregatedSummary = ({ user }) => {
     };
 
     fetchAggregatedNotes();
-  }, [activeToggle, user]);
+  }, [activeToggle, user, userNotes]);
 
   // --- Data Transformation ---
   // Group notes by user ID to handle multiple notes from the same user

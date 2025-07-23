@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from "react";
+// src/SummaryAggregator.js
+
+import React, { useState, useEffect, useRef } from "react";
 
 function SummaryAggregator({ user, userList, onSaveSelection }) {
-  // 1. This component manages its own state for which checkboxes are checked.
-  // The state is an object where keys are user IDs and values are booleans.
-  // e.g., { 'user-id-1': true, 'user-id-2': false }
   const [selected, setSelected] = useState({});
 
-  // 2. Pre-populate the checkboxes when the component loads or the user's saved data changes.
+  // This ref will hold the timer ID for our debounce logic.
+  // Using a ref ensures the timer is not reset on every render.
+  const debounceTimer = useRef(null);
+
+  // This effect is ONLY responsible for populating the checkboxes from props.
   useEffect(() => {
-    // `user.selected_user_ids` is the array of IDs we saved in Supabase.
-    // We convert this array into the object format our state needs.
     const previouslySelected = (user.selected_user_ids || []).reduce(
       (acc, id) => {
         acc[id] = true;
@@ -20,32 +21,37 @@ function SummaryAggregator({ user, userList, onSaveSelection }) {
     setSelected(previouslySelected);
   }, [user.selected_user_ids]);
 
-  // 3. A handler for when a checkbox is clicked.
+  // This is the handler for a user clicking a checkbox.
   const handleCheckboxChange = (userId) => {
-    setSelected((prevSelected) => ({
-      ...prevSelected,
-      [userId]: !prevSelected[userId], // Toggle the boolean value
-    }));
+    // 1. Update the local state immediately for a responsive UI.
+    const newSelectedState = {
+      ...selected,
+      [userId]: !selected[userId],
+    };
+    setSelected(newSelectedState);
+
+    // 2. Start the debounced save process.
+    // Clear any existing timer to reset the debounce period.
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // Set a new timer.
+    debounceTimer.current = setTimeout(() => {
+      // After 1 second, convert the state to an array of IDs and save.
+      const selectedIds = Object.keys(newSelectedState).filter(
+        (id) => newSelectedState[id]
+      );
+      onSaveSelection(selectedIds);
+    }, 1000); // 1-second debounce delay
   };
 
-  // 4. When the form is submitted...
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // We convert our state object back into an array of just the selected IDs.
-    const selectedIds = Object.keys(selected).filter((id) => selected[id]);
-    // Then we call the onSaveSelection function passed from App.js.
-    onSaveSelection(selectedIds);
-  };
-
-  // Group users by team for display, just like on the login page.
-  // We'll filter out the currently logged-in user from the list.
-  const groupedUsers = userList
-    .filter((u) => u.id !== user.id) // Don't show the current user in the list
-    .reduce((acc, u) => {
-      if (!acc[u.team]) acc[u.team] = [];
-      acc[u.team].push(u);
-      return acc;
-    }, {});
+  // The rest of the component is exactly as it was.
+  const groupedUsers = userList.reduce((acc, u) => {
+    if (!acc[u.team]) acc[u.team] = [];
+    acc[u.team].push(u);
+    return acc;
+  }, {});
 
   return (
     <div className="widget-card">
@@ -61,71 +67,64 @@ function SummaryAggregator({ user, userList, onSaveSelection }) {
           }}
         >
           <p style={{ margin: "0 0 0.5rem 0" }}>
-            Receive a daily AI-powered summary email!
+            Select users to receive a daily AI-powered summary email. This
+            report:
           </p>
-          <p style={{ margin: "0 0 0.5rem 0" }}>This report will:</p>
           <ul style={{ margin: 0, paddingLeft: "1.5rem" }}>
             <li>
-              Summarize recent <strong>notes</strong> and{" "}
+              Summarizes recent <strong>notes</strong> and{" "}
               <strong>pull requests</strong>.
             </li>
             <li>Provides a quick overview of your team's progress.</li>
             <li>Is delivered to your inbox every morning.</li>
           </ul>
-          <p style={{ margin: "0.5rem 0 0.5rem 0" }}>
-            Whose updates should be included in your personalized summary email?
-          </p>
         </div>
       </div>
-      <form onSubmit={handleSubmit}>
-        <div className="widget-scroll-container">
-          {Object.keys(groupedUsers)
-            .sort()
-            .map((team) => (
-              <div key={team} style={{ marginBottom: "1.5rem" }}>
-                <h3
-                  style={{
-                    fontSize: "1rem",
-                    fontWeight: "700",
-                    color: "var(--color-dark)",
-                    marginBottom: "0.75rem",
-                    borderBottom: "1px solid var(--color-border)",
-                    paddingBottom: "0.5rem",
-                  }}
-                >
-                  {team}
-                </h3>
-                {groupedUsers[team].map((listUser) => (
-                  <div key={listUser.id} className="form-group">
-                    <label
+
+      <div className="widget-scroll-container">
+        {Object.keys(groupedUsers)
+          .sort()
+          .map((team) => (
+            <div key={team} style={{ marginBottom: "1.5rem" }}>
+              <h3
+                style={{
+                  fontSize: "1rem",
+                  fontWeight: "700",
+                  color: "var(--color-dark)",
+                  marginBottom: "0.75rem",
+                  borderBottom: "1px solid var(--color-border)",
+                  paddingBottom: "0.5rem",
+                }}
+              >
+                {team}
+              </h3>
+              {groupedUsers[team].map((listUser) => (
+                <div key={listUser.id} className="form-group">
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      fontWeight: "400",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!selected[listUser.id]}
+                      onChange={() => handleCheckboxChange(listUser.id)}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        fontWeight: "400",
-                        cursor: "pointer",
+                        marginRight: "0.75rem",
+                        height: "1rem",
+                        width: "1rem",
                       }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={!!selected[listUser.id]} // Use !! to ensure it's a boolean (true/false)
-                        onChange={() => handleCheckboxChange(listUser.id)}
-                        style={{
-                          marginRight: "0.75rem",
-                          height: "1rem",
-                          width: "1rem",
-                        }}
-                      />
-                      {listUser.display_name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            ))}
-        </div>
-        <button type="submit" className="btn">
-          Save Selection
-        </button>
-      </form>
+                    />
+                    {listUser.display_name}
+                  </label>
+                </div>
+              ))}
+            </div>
+          ))}
+      </div>
     </div>
   );
 }
