@@ -25,7 +25,18 @@ function DashboardPage({
   return (
     <div>
       <header className="app-header">
-        <h1>Welcome, {user.display_name}!</h1>
+        <div>
+          <h1>Welcome, {user.display_name}!</h1>
+          <p
+            style={{
+              margin: "0.25rem 0 0 0",
+              color: "var(--color-text-secondary)",
+              fontSize: "1rem",
+            }}
+          >
+            {user.role} - {user.team}
+          </p>
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <CounterButton
             label="Logout"
@@ -263,7 +274,7 @@ function DashboardPage({
 
         {/* --- GitHub PRs Widget --- */}
         <div className="widget-card">
-          <GitHubPRList pullRequests={userPullRequests} />
+          <GitHubPRList user={user} pullRequests={userPullRequests} />
         </div>
 
         {/* --- Edit Profile & Summary Aggregator Widgets --- */}
