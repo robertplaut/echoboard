@@ -3,7 +3,7 @@
 // 1. Import useState to manage which PRs are expanded
 import React, { useState } from "react";
 
-const GitHubPRList = ({ pullRequests }) => {
+const GitHubPRList = ({ user, pullRequests }) => {
   // 2. State to track the IDs of expanded PRs
   const [expandedPRs, setExpandedPRs] = useState({});
 
@@ -19,7 +19,10 @@ const GitHubPRList = ({ pullRequests }) => {
     return (
       <div>
         <div className="widget-header">
-          <h2>GitHub Pull Requests</h2>
+          <h2>
+            GitHub Pull Requests
+            {user.github_username && ` - ${user.github_username}`}
+          </h2>
         </div>
         <p>No pull requests found for this user.</p>
       </div>
@@ -29,7 +32,10 @@ const GitHubPRList = ({ pullRequests }) => {
   return (
     <div>
       <div className="widget-header">
-        <h2>GitHub Pull Requests</h2>
+        <h2>
+          GitHub Pull Requests
+          {user.github_username && ` - ${user.github_username}`}
+        </h2>
       </div>
       <div className="widget-scroll-container">
         <ul style={{ listStyle: "none", padding: 0 }}>
