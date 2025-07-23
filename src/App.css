@@ -9,11 +9,22 @@
 
 /* Header Styles */
 .app-header {
+  /* Positioning for Sticky Header */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  /* Styling for when it's "stuck" */
+  background-color: var(--color-background);
+  padding: 1rem; /* Adjust padding for a cleaner sticky look */
+
+  /* Original Flexbox properties */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
+
+  /* Replace margin with a clean border */
+  margin-bottom: 0;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -28,6 +39,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 2rem;
+  /* Add padding to the top to offset the sticky header's height */
+  padding-top: 2rem;
 }
 
 /* Widget Card Styles */
@@ -45,10 +58,18 @@
     0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
+.widget-header {
+  background-color: var(
+    --color-background
+  ); /* Use the main app background for a subtle contrast */
+  padding: 1rem 1.5rem;
+  margin: -1.5rem -1.5rem 1.5rem -1.5rem; /* Pull header to the edges of the card */
+  border-bottom: 1px solid var(--color-border);
+}
+
 .widget-card h2 {
   font-size: 1.25rem;
-  margin-top: 0;
-  margin-bottom: 1rem;
+  margin: 0;
   color: var(--color-dark);
 }
 

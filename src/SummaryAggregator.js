@@ -49,11 +49,19 @@ function SummaryAggregator({ user, userList, onSaveSelection }) {
 
   return (
     <div className="widget-card">
-      <h2>Summary Aggregator</h2>
-      <p style={{ color: "var(--color-text-secondary)", marginTop: "-0.5rem" }}>
-        Select the specific users whose notes and pull requests you would like
-        to have included in a combined summary that gets emailed to you daily.
-      </p>
+      <div className="widget-header">
+        <h2>Summary Aggregator</h2>
+        <p
+          style={{
+            color: "var(--color-text-secondary)",
+            marginTop: "0.25rem", // Adjusted margin for better spacing
+            fontWeight: "400", // Lighter font weight for subtitle
+            fontSize: "0.9rem", // Slightly smaller font size
+          }}
+        >
+          Select users to include in a combined summary.
+        </p>
+      </div>
       <form onSubmit={handleSubmit}>
         <div className="widget-scroll-container">
           {Object.keys(groupedUsers)
