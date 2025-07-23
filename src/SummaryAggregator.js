@@ -51,16 +51,31 @@ function SummaryAggregator({ user, userList, onSaveSelection }) {
     <div className="widget-card">
       <div className="widget-header">
         <h2>Summary Aggregator</h2>
-        <p
+        <div
           style={{
             color: "var(--color-text-secondary)",
-            marginTop: "0.25rem", // Adjusted margin for better spacing
-            fontWeight: "400", // Lighter font weight for subtitle
-            fontSize: "0.9rem", // Slightly smaller font size
+            marginTop: "0.25rem",
+            fontWeight: "400",
+            fontSize: "0.9rem",
+            lineHeight: "1.4",
           }}
         >
-          Select users to include in a combined summary.
-        </p>
+          <p style={{ margin: "0 0 0.5rem 0" }}>
+            Receive a daily AI-powered summary email!
+          </p>
+          <p style={{ margin: "0 0 0.5rem 0" }}>This report will:</p>
+          <ul style={{ margin: 0, paddingLeft: "1.5rem" }}>
+            <li>
+              Summarize recent <strong>notes</strong> and{" "}
+              <strong>pull requests</strong>.
+            </li>
+            <li>Provides a quick overview of your team's progress.</li>
+            <li>Is delivered to your inbox every morning.</li>
+          </ul>
+          <p style={{ margin: "0.5rem 0 0.5rem 0" }}>
+            Whose updates should be included in your personalized summary email?
+          </p>
+        </div>
       </div>
       <form onSubmit={handleSubmit}>
         <div className="widget-scroll-container">
