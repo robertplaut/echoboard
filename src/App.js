@@ -1,13 +1,14 @@
 // src/App.js
 
 import React, { useEffect, useReducer, useCallback } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import LoginPage from "./LoginPage";
 import DashboardPage from "./DashboardPage";
 import ThemeToggle from "./ThemeToggle";
 import BackToTopButton from "./BackToTopButton";
 import supabase from "./supabaseClient";
 import ProtectedRoute from "./ProtectedRoute";
+import VerticalNav from "./VerticalNav";
 import { fetchPullRequests } from "./githubApi";
 import { useToast } from "./ToastContext";
 import "./App.css";
@@ -605,8 +606,14 @@ Standup notes for ${displayName}:
       }, {})
     : {}; // If userList isn't an array, default to an empty object.
 
+  const location = useLocation();
+  const isDashboard = location.pathname.startsWith("/user/");
+
+  console.log("Current path:", location.pathname);
+
   return (
     <div className="app-container">
+      {isDashboard && <VerticalNav />}
       <div
         style={{
           position: "fixed",
@@ -617,6 +624,7 @@ Standup notes for ${displayName}:
       >
         <ThemeToggle />
       </div>
+
       <Routes>
         <Route
           path="/"

@@ -1,0 +1,65 @@
+/* src/VerticalNav.css */
+.vertical-nav {
+  position: fixed;
+  top: 220px;
+  left: calc((100vw - 1200px) / 2 - 100px); /* aligns next to .app-container */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 1000;
+}
+
+/* Hide nav if screen is narrower than 1280px */
+@media (max-width: 1420px) {
+  .vertical-nav {
+    display: none;
+  }
+}
+
+.nav-icon {
+  position: relative;
+  display: block;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.nav-icon:hover {
+  background-color: var(--color-background-offset);
+}
+
+.nav-icon img {
+  width: 48px;
+  height: 48px;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.nav-icon:hover img {
+  transform: scale(1.1);
+}
+
+/* Tooltip Styles */
+.nav-icon::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 110%;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--color-dark);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+  font-size: 0.75rem;
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.85);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.nav-icon:hover::after {
+  opacity: 1;
+}
