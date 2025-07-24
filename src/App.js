@@ -1,13 +1,7 @@
 // src/App.js
 
 import React, { useEffect, useReducer, useCallback } from "react";
-import {
-  Routes,
-  Route,
-  useNavigate,
-  useParams,
-  useLocation,
-} from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import LoginPage from "./LoginPage";
 import DashboardPage from "./DashboardPage";
 import ThemeToggle from "./ThemeToggle";
@@ -128,7 +122,6 @@ function App() {
   } = state;
 
   const navigate = useNavigate();
-  const location = useLocation();
   const { addToast } = useToast();
 
   const handleQuickLogin = useCallback(
