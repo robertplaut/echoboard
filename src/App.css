@@ -229,3 +229,28 @@ hr {
 .toggle-switch-button:not(.active):hover {
   background-color: var(--color-background);
 }
+
+/* --- AI Summary Component --- */
+.ai-summary-content {
+  background-color: var(--color-background-offset);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+/* We use <pre> to preserve the AI's formatting (like line breaks and spacing). */
+.ai-summary-content pre {
+  margin: 0;
+  white-space: pre-wrap; /* Allows text to wrap instead of overflowing */
+  word-wrap: break-word; /* Breaks long words if necessary */
+  font-family: inherit; /* Use the app's default font */
+  font-size: 1em;
+  color: var(--color-text-primary);
+}
+
+/* A smaller button variant for secondary actions like "Clear" */
+.btn-small {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}

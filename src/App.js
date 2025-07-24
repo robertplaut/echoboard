@@ -33,6 +33,10 @@ const initialState = {
   blockersText: "",
   learningsText: "",
   userNotes: [],
+  isSummarizing: false,
+  aiSummary: "",
+  aiError: null,
+  aggregatedNotes: [],
 };
 
 function reducer(state, action) {
@@ -93,6 +97,16 @@ function reducer(state, action) {
           u.id === action.payload.id ? action.payload : u
         ),
       };
+    case "SUMMARIZE_START":
+      return { ...state, isSummarizing: true, aiSummary: "", aiError: null };
+    case "SUMMARIZE_SUCCESS":
+      return { ...state, isSummarizing: false, aiSummary: action.payload };
+    case "SUMMARIZE_ERROR":
+      return { ...state, isSummarizing: false, aiError: action.payload };
+    case "CLEAR_AI_SUMMARY":
+      return { ...state, aiSummary: "", aiError: null };
+    case "SET_AGGREGATED_NOTES":
+      return { ...state, aggregatedNotes: action.payload };
     default:
       return state;
   }
@@ -119,6 +133,11 @@ function App() {
     blockersText,
     learningsText,
     userNotes,
+    // Add our new AI state variables here
+    isSummarizing,
+    aiSummary,
+    aiError,
+    aggregatedNotes,
   } = state;
 
   const navigate = useNavigate();
@@ -254,6 +273,35 @@ function App() {
     [user, addToast]
   );
 
+  const fetchAggregatedNotes = useCallback(
+    async (selectedIds) => {
+      if (!selectedIds || selectedIds.length === 0) {
+        dispatch({ type: "SET_AGGREGATED_NOTES", payload: [] });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("notes")
+        .select(
+          "id, user_id, date, yesterday_text, today_text, blockers_text, learnings_text"
+        )
+        .in("user_id", selectedIds)
+        .order("date", { ascending: false });
+
+      if (error) {
+        addToast("Failed to fetch notes for selected users.", "error");
+        console.error("Error fetching aggregated notes:", error);
+        dispatch({ type: "SET_AGGREGATED_NOTES", payload: [] });
+        return;
+      }
+
+      // REMOVED the logic that found only the latest note.
+      // We now pass ALL notes for the selected users.
+      dispatch({ type: "SET_AGGREGATED_NOTES", payload: data || [] });
+    },
+    [addToast]
+  );
+
   const fetchNotesForUser = async (userId) => {
     if (!userId) return [];
     const { data, error } = await supabase
@@ -337,6 +385,107 @@ function App() {
     const updatedNotes = await fetchNotesForUser(user.id);
     dispatch({ type: "SUBMIT_NOTE_SUCCESS", payload: updatedNotes });
     addToast("Note saved successfully!", "success");
+
+    // This is the new line we are adding.
+    // After a note is saved, immediately re-fetch the aggregated notes
+    // for the users currently selected in the aggregator.
+    if (user && user.selected_user_ids) {
+      fetchAggregatedNotes(user.selected_user_ids);
+    }
+  };
+
+  const handleGenerateSummary = async () => {
+    dispatch({ type: "SUMMARIZE_START" });
+
+    // This check now uses our global aggregatedNotes state.
+    if (!aggregatedNotes || aggregatedNotes.length === 0) {
+      dispatch({
+        type: "SUMMARIZE_ERROR",
+        payload:
+          "No notes found for the selected users. Please make a selection and ensure they have recent notes.",
+      });
+      return;
+    }
+
+    // Get today's date in YYYY-MM-DD format, matching the database format.
+    const today = new Date().toISOString().split("T")[0];
+
+    // 1. Filter notes to only include those from today.
+    const todaysNotes = aggregatedNotes.filter((note) => note.date === today);
+
+    if (todaysNotes.length === 0) {
+      dispatch({
+        type: "SUMMARIZE_ERROR",
+        payload:
+          "No notes from today were found for the selected users. The AI can only summarize today's entries.",
+      });
+      return;
+    }
+
+    // 2. Create a list of display names from today's notes.
+    const userNames = todaysNotes
+      .map((note) => {
+        const user = userList.find((u) => u.id === note.user_id);
+        return user ? user.display_name : "Unknown User";
+      })
+      .filter((name, index, self) => self.indexOf(name) === index); // Get unique names
+
+    // 3. Format the notes string for the AI.
+    const notesToSummarize = todaysNotes
+      .map((note) => {
+        const user = userList.find((u) => u.id === note.user_id);
+        const displayName = user ? user.display_name : "Unknown User";
+        return `
+Standup notes for ${displayName}:
+- Yesterday: ${note.yesterday_text || "N/A"}
+- Today: ${note.today_text || "N/A"}
+- Blockers: ${note.blockers_text || "N/A"}
+- Learnings: ${note.learnings_text || "N/A"}
+`;
+      })
+      .join("\n---\n");
+
+    if (notesToSummarize.trim() === "") {
+      dispatch({
+        type: "SUMMARIZE_ERROR",
+        payload: "Today's notes appear to be empty.",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("/.netlify/functions/generate-summary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // 4. Send the filtered notes, the user names, and the date to the function.
+        body: JSON.stringify({
+          notes: notesToSummarize,
+          users: userNames,
+          date: today,
+        }),
+      });
+
+      // 5. Check if the network request itself was successful.
+      if (!response.ok) {
+        // Try to get a specific error message from the function's response if possible.
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `Request failed with status ${response.status}`
+        );
+      }
+
+      // 6. Parse the JSON response from the function.
+      const data = await response.json();
+
+      // 7. Dispatch the success action with the summary from the AI.
+      dispatch({ type: "SUMMARIZE_SUCCESS", payload: data.summary });
+    } catch (error) {
+      // 8. If any part of the try block fails, dispatch the error action.
+      dispatch({ type: "SUMMARIZE_ERROR", payload: error.message });
+      addToast(error.message, "error", "AI Summary Failed");
+    }
   };
 
   // This effect pre-fills the note form when the date changes
@@ -504,6 +653,13 @@ function App() {
                 learningsText={learningsText}
                 handleNoteSubmit={handleNoteSubmit}
                 dispatch={dispatch}
+                // Add the new AI-related props here
+                isSummarizing={isSummarizing}
+                aiSummary={aiSummary}
+                aiError={aiError}
+                handleGenerateSummary={handleGenerateSummary}
+                aggregatedNotes={aggregatedNotes}
+                fetchAggregatedNotes={fetchAggregatedNotes}
               />
             </ProtectedRoute>
           }

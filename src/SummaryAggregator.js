@@ -1,15 +1,23 @@
-// src/SummaryAggregator.js
+import { useState, useEffect, useRef, useCallback } from "react";
 
-import React, { useState, useEffect, useRef } from "react";
-
-function SummaryAggregator({ user, userList, onSaveSelection }) {
+// 1. Accept the new `fetchAggregatedNotes` prop
+function SummaryAggregator({
+  user,
+  userList,
+  onSaveSelection,
+  fetchAggregatedNotes,
+}) {
   const [selected, setSelected] = useState({});
-
-  // This ref will hold the timer ID for our debounce logic.
-  // Using a ref ensures the timer is not reset on every render.
   const debounceTimer = useRef(null);
 
-  // This effect is ONLY responsible for populating the checkboxes from props.
+  // 2. We create a stable function with useCallback to get the selected IDs.
+  // This ensures our effects don't re-run unnecessarily.
+  const getSelectedIds = useCallback(() => {
+    return Object.keys(selected).filter((id) => selected[id]);
+  }, [selected]);
+
+  // This effect is now ONLY responsible for populating the checkboxes from props.
+  // It runs once when the component loads or when the user object changes.
   useEffect(() => {
     const previouslySelected = (user.selected_user_ids || []).reduce(
       (acc, id) => {
@@ -21,32 +29,35 @@ function SummaryAggregator({ user, userList, onSaveSelection }) {
     setSelected(previouslySelected);
   }, [user.selected_user_ids]);
 
-  // This is the handler for a user clicking a checkbox.
+  // 3. A new effect that runs whenever the selection changes.
+  // Its job is to fetch the notes for the summary view.
+  useEffect(() => {
+    const selectedIds = getSelectedIds();
+    // We call the function passed down from App.js
+    fetchAggregatedNotes(selectedIds);
+  }, [selected, fetchAggregatedNotes, getSelectedIds]); // It re-runs when the selection changes.
+
   const handleCheckboxChange = (userId) => {
-    // 1. Update the local state immediately for a responsive UI.
     const newSelectedState = {
       ...selected,
       [userId]: !selected[userId],
     };
     setSelected(newSelectedState);
 
-    // 2. Start the debounced save process.
-    // Clear any existing timer to reset the debounce period.
+    // Debounced save logic (this remains the same)
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
 
-    // Set a new timer.
     debounceTimer.current = setTimeout(() => {
-      // After 1 second, convert the state to an array of IDs and save.
       const selectedIds = Object.keys(newSelectedState).filter(
         (id) => newSelectedState[id]
       );
       onSaveSelection(selectedIds);
-    }, 1000); // 1-second debounce delay
+    }, 1000);
   };
 
-  // The rest of the component is exactly as it was.
+  // The JSX part of the component remains exactly the same.
   const groupedUsers = userList.reduce((acc, u) => {
     if (!acc[u.team]) acc[u.team] = [];
     acc[u.team].push(u);
@@ -67,16 +78,12 @@ function SummaryAggregator({ user, userList, onSaveSelection }) {
           }}
         >
           <p style={{ margin: "0 0 0.5rem 0" }}>
-            Select users to receive a daily AI-powered summary email. This
-            report:
+            Select users to include in the real-time aggregated summary view and
+            the AI summary generation.
           </p>
           <ul style={{ margin: 0, paddingLeft: "1.5rem" }}>
-            <li>
-              Summarizes recent <strong>notes</strong> and{" "}
-              <strong>pull requests</strong>.
-            </li>
-            <li>Provides a quick overview of your team's progress.</li>
-            <li>Is delivered to your inbox every morning.</li>
+            <li>Your selections are saved automatically.</li>
+            <li>AI summary will be based on these selections.</li>
           </ul>
         </div>
       </div>

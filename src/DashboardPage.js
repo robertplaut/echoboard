@@ -6,6 +6,7 @@ import GitHubPRList from "./GitHubPRList";
 import EditProfileForm from "./EditProfileForm";
 import SummaryAggregator from "./SummaryAggregator";
 import AggregatedSummary from "./AggregatedSummary";
+import AISummary from "./AISummary";
 
 function DashboardPage({
   user,
@@ -22,6 +23,13 @@ function DashboardPage({
   handleProfileUpdate,
   handleSaveSelection,
   dispatch,
+  // Add the new props here
+  isSummarizing,
+  aiSummary,
+  aiError,
+  handleGenerateSummary,
+  aggregatedNotes,
+  fetchAggregatedNotes,
 }) {
   return (
     <div>
@@ -283,13 +291,26 @@ function DashboardPage({
 
         {/* --- Aggregated Summary View Widget --- */}
         <div className="widget-card">
-          <AggregatedSummary user={user} userNotes={userNotes} />
+          <AggregatedSummary
+            userList={userList}
+            aggregatedNotes={aggregatedNotes}
+          />
         </div>
 
         <SummaryAggregator
           user={user}
           userList={userList}
           onSaveSelection={handleSaveSelection}
+          fetchAggregatedNotes={fetchAggregatedNotes}
+        />
+
+        {/* --- AI Summary Widget --- */}
+        <AISummary
+          onGenerate={handleGenerateSummary}
+          summary={aiSummary}
+          isSummarizing={isSummarizing}
+          error={aiError}
+          onClear={() => dispatch({ type: "CLEAR_AI_SUMMARY" })}
         />
       </div>
     </div>

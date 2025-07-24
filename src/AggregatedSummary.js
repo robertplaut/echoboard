@@ -1,78 +1,43 @@
-// src/AggregatedSummary.js
+import React, { useState } from "react";
 
-import React, { useState, useEffect } from "react";
-import supabase from "./supabaseClient";
-
-// This component now ONLY needs the logged-in user's data
-const AggregatedSummary = ({ user, userNotes }) => {
+const AggregatedSummary = ({ aggregatedNotes, userList }) => {
   const [activeToggle, setActiveToggle] = useState("Today");
-  const [notes, setNotes] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchAggregatedNotes = async () => {
-      if (
-        !user ||
-        !user.selected_user_ids ||
-        user.selected_user_ids.length === 0
-      ) {
-        setNotes([]);
-        setIsLoading(false);
-        return;
-      }
+  // First, filter the notes based on the active date toggle
+  const filteredNotes = aggregatedNotes.filter((note) => {
+    const noteDate = new Date(note.date + "T00:00:00Z");
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
 
-      setIsLoading(true);
+    if (activeToggle === "Today") {
+      return noteDate.getTime() === today.getTime();
+    }
 
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
+    if (activeToggle === "This Week") {
+      const startOfWeek = new Date(today);
+      const day = today.getUTCDay();
+      const diff = day === 0 ? 6 : day - 1;
+      startOfWeek.setUTCDate(today.getUTCDate() - diff);
+      return noteDate >= startOfWeek;
+    }
 
-      let startDate = new Date(today);
-      let endDate = new Date(today);
-      endDate.setUTCHours(23, 59, 59, 999);
+    if (activeToggle === "This Month") {
+      const startOfMonth = new Date(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        1
+      );
+      return noteDate >= startOfMonth;
+    }
+    return true;
+  });
 
-      if (activeToggle === "This Week") {
-        const dayOfWeek = today.getUTCDay();
-        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        startDate.setUTCDate(today.getUTCDate() - diff);
-      } else if (activeToggle === "This Month") {
-        startDate = new Date(
-          Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)
-        );
-      }
-
-      const startDateString = startDate.toISOString().split("T")[0];
-      const endDateString = endDate.toISOString().split("T")[0];
-
-      // UPDATED QUERY: Fetch display_name, role, and team from the related users table
-      const { data, error } = await supabase
-        .from("notes")
-        .select(`*, user:users(display_name, role, team)`)
-        .in("user_id", user.selected_user_ids)
-        .gte("date", startDateString)
-        .lte("date", endDateString)
-        .order("date", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching aggregated notes:", error);
-        setNotes([]);
-      } else {
-        setNotes(data || []);
-      }
-
-      setIsLoading(false);
-    };
-
-    fetchAggregatedNotes();
-  }, [activeToggle, user, userNotes]);
-
-  // --- Data Transformation ---
-  // Group notes by user ID to handle multiple notes from the same user
-  const groupedNotes = notes.reduce((acc, note) => {
+  // Now, group the filtered notes by user
+  const groupedNotes = filteredNotes.reduce((acc, note) => {
     const userId = note.user_id;
     if (!acc[userId]) {
-      // Initialize the user's group with their info and an empty notes array
       acc[userId] = {
-        userInfo: note.user,
+        userInfo: userList.find((u) => u.id === userId) || {},
         notes: [],
       };
     }
@@ -80,17 +45,19 @@ const AggregatedSummary = ({ user, userNotes }) => {
     return acc;
   }, {});
 
-  // Convert the object to an array and then sort it
+  // Convert the grouped object into an array for sorting and rendering
   const userGroups = Object.values(groupedNotes).sort((a, b) => {
-    // Primary sort: by team name
-    if (a.userInfo.team < b.userInfo.team) return -1;
-    if (a.userInfo.team > b.userInfo.team) return 1;
+    const teamA = a.userInfo.team || "";
+    const teamB = b.userInfo.team || "";
+    if (teamA < teamB) return -1;
+    if (teamA > teamB) return 1;
 
-    // Secondary sort: by display name, if teams are the same
-    if (a.userInfo.display_name < b.userInfo.display_name) return -1;
-    if (a.userInfo.display_name > b.userInfo.display_name) return 1;
+    const nameA = a.userInfo.display_name || "";
+    const nameB = b.userInfo.display_name || "";
+    if (nameA < nameB) return -1;
+    if (nameA > nameB) return 1;
 
-    return 0; // if both are equal
+    return 0;
   });
 
   return (
@@ -105,7 +72,8 @@ const AggregatedSummary = ({ user, userNotes }) => {
             fontSize: "0.9rem",
           }}
         >
-          A real-time summary of notes from your selected users.
+          A real-time summary of notes from your selected users for the chosen
+          period.
         </p>
       </div>
 
@@ -140,13 +108,11 @@ const AggregatedSummary = ({ user, userNotes }) => {
       </div>
 
       <div className="widget-scroll-container">
-        {isLoading ? (
-          <p>Loading summary...</p>
-        ) : userGroups.length === 0 ? (
+        {userGroups.length === 0 ? (
           <p>No notes found for the selected users in this period.</p>
         ) : (
           (() => {
-            let lastTeam = null; // Our tracker variable
+            let lastTeam = null;
             return userGroups.map((group) => {
               const currentTeam = group.userInfo.team;
               const showTeamHeader = currentTeam !== lastTeam;
@@ -186,16 +152,13 @@ const AggregatedSummary = ({ user, userNotes }) => {
                         ({group.userInfo.role})
                       </span>
                     </h3>
+                    {/* Inner loop for this user's notes */}
                     {group.notes.map((note) => (
                       <div
                         key={note.id}
                         style={{
                           padding: "0.75rem 0.5rem",
-                          borderBottom: `1px solid ${
-                            showTeamHeader
-                              ? "var(--color-border)"
-                              : "var(--color-background)"
-                          }`,
+                          borderBottom: `1px solid var(--color-border)`,
                         }}
                       >
                         <strong
@@ -204,13 +167,10 @@ const AggregatedSummary = ({ user, userNotes }) => {
                             fontSize: "0.9rem",
                           }}
                         >
+                          Note from:{" "}
                           {new Date(note.date + "T00:00:00").toLocaleDateString(
                             "en-US",
-                            {
-                              month: "long",
-                              day: "numeric",
-                              timeZone: "UTC",
-                            }
+                            { month: "long", day: "numeric", timeZone: "UTC" }
                           )}
                         </strong>
                         {note.yesterday_text && (
