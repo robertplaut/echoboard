@@ -13,12 +13,13 @@ import DashboardPage from "./DashboardPage";
 import ThemeToggle from "./ThemeToggle";
 import BackToTopButton from "./BackToTopButton";
 import supabase from "./supabaseClient";
+import ProtectedRoute from "./ProtectedRoute";
 import { fetchPullRequests } from "./githubApi";
 import { useToast } from "./ToastContext";
 import "./App.css";
 
-const GITHUB_OWNER = "robertplaut";
-const GITHUB_REPO = "echostatus";
+const GITHUB_OWNER = process.env.REACT_APP_GITHUB_OWNER;
+const GITHUB_REPO = process.env.REACT_APP_GITHUB_REPO;
 
 const initialState = {
   user: null,
@@ -107,7 +108,7 @@ function DashboardWrapper(props) {
     if (!user || user.username !== username) {
       handleQuickLogin(username);
     }
-  }, [username, handleQuickLogin]);
+  }, [username, handleQuickLogin, user]);
   if (!user || user.username !== username) {
     return <div>Loading user dashboard...</div>;
   }
@@ -216,8 +217,8 @@ function App() {
   };
 
   const handleLogout = () => {
-    dispatch({ type: "LOGOUT" });
-    navigate("/");
+    navigate("/"); // 1. Navigate to the home page first.
+    dispatch({ type: "LOGOUT" }); // 2. Then, clear the user state.
   };
 
   const handleProfileUpdate = async (formData) => {
@@ -485,24 +486,25 @@ function App() {
         <Route
           path="/user/:username"
           element={
-            <DashboardWrapper
-              user={user}
-              userList={userList}
-              handleQuickLogin={handleQuickLogin}
-              handleLogout={handleLogout}
-              // 3. Pass the new handler function down as a prop
-              handleProfileUpdate={handleProfileUpdate}
-              handleSaveSelection={handleSaveSelection}
-              userPullRequests={userPullRequests}
-              userNotes={userNotes}
-              noteDate={noteDate}
-              yesterdayText={yesterdayText}
-              todayText={todayText}
-              blockersText={blockersText}
-              learningsText={learningsText}
-              handleNoteSubmit={handleNoteSubmit}
-              dispatch={dispatch}
-            />
+            <ProtectedRoute user={user}>
+              <DashboardWrapper
+                user={user}
+                userList={userList}
+                handleQuickLogin={handleQuickLogin}
+                handleLogout={handleLogout}
+                handleProfileUpdate={handleProfileUpdate}
+                handleSaveSelection={handleSaveSelection}
+                userPullRequests={userPullRequests}
+                userNotes={userNotes}
+                noteDate={noteDate}
+                yesterdayText={yesterdayText}
+                todayText={todayText}
+                blockersText={blockersText}
+                learningsText={learningsText}
+                handleNoteSubmit={handleNoteSubmit}
+                dispatch={dispatch}
+              />
+            </ProtectedRoute>
           }
         />
       </Routes>
