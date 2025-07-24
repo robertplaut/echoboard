@@ -146,7 +146,7 @@ function DashboardPage({
             <button type="submit" className="btn">
               Save Note
             </button>
-            <p
+            <div
               style={{
                 fontSize: "0.875rem",
                 color: "var(--color-text-secondary)",
@@ -154,7 +154,7 @@ function DashboardPage({
                 textAlign: "left",
               }}
             >
-              Notes:
+              <p>Notes:</p>
               <ul>
                 <li>
                   All fields are optional, but at least one must be used to
@@ -163,7 +163,7 @@ function DashboardPage({
                 <li>You may update notes from past dates if needed</li>
                 <li>After saving past note, form returns to today's date</li>
               </ul>
-            </p>
+            </div>
           </form>
         </div>
 
