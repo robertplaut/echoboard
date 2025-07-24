@@ -459,11 +459,12 @@ Standup notes for ${displayName}:
         headers: {
           "Content-Type": "application/json",
         },
-        // 4. Send the filtered notes, the user names, and the date to the function.
+        // 4. Send the filtered notes, the user names, the date, and the requesting user's display name to the function.
         body: JSON.stringify({
           notes: notesToSummarize,
           users: userNames,
           date: today,
+          requestingUserDisplayName: user.display_name, // Add this line
         }),
       });
 

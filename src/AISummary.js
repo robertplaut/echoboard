@@ -12,7 +12,8 @@ const AISummary = ({ onGenerate, summary, isSummarizing, error, onClear }) => {
   return (
     <div className="widget-card">
       <div className="widget-header">
-        <h2>🤖 AI Summary</h2>
+        <h2>✨ AI Daily Summary</h2>
+        <p className="widget-subheading">Today's notes will be sent to AI for review based on users selected in the Summary Aggregator.</p>
         {/* We only show the "Clear" button if there's a summary or an error to clear. */}
         {(summary || error) && (
           <button onClick={onClear} className="btn-secondary btn-small">
