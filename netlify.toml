@@ -1,0 +1,27 @@
+# This is the main configuration file for Netlify.
+
+[build]
+  # This command tells Netlify how to build the site.
+  # 'npm run build' is the standard command for Create React App.
+  command = "npm run build"
+  
+  # This is the directory that contains the built site.
+  # Create React App puts the final static files in the 'build' folder.
+  publish = "build"
+
+[dev]
+  # This section configures the local Netlify development server (netlify dev),
+  # which we can use later. It tells it what port our React app runs on.
+  framework = "#auto"
+  port = 8888
+  targetPort = 3000
+
+# This is a crucial rule for single-page applications like ours.
+# It tells Netlify that for any request that doesn't match a specific file,
+# it should serve the 'index.html' file. This allows React Router to handle
+# all the client-side routing. Without this, trying to refresh a page like
+# /user/some-user would result in a 404 error from Netlify.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
