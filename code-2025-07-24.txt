@@ -1,0 +1,1599 @@
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\package.json ---
+
+{
+  "name": "echostatus",
+  "version": "2.2.0",
+  "private": true,
+  "homepage": "https://robertplaut.github.io/echostatus",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.50.3",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^13.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.7.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
+    "release": "standard-version"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\public\index.html ---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.svg" type="image/svg+xml" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Echostatus: A lightweight dashboard for tracking personal counters, GitHub activity, and daily summary notes."
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <title>Echostatus</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\public\manifest.json ---
+
+{
+  "short_name": "Echostatus",
+  "name": "Echostatus Dashboard",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#F4AD47",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\public\robots.txt ---
+
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow:
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\src\App.js ---
+
+// src/App.js
+
+import React, { useEffect, useReducer, useCallback } from "react";
+import {
+  Routes,
+  Route,
+  useNavigate,
+  useParams,
+  useLocation,
+} from "react-router-dom";
+import LoginPage from "./LoginPage";
+import DashboardPage from "./DashboardPage";
+import ThemeToggle from "./ThemeToggle";
+import BackToTopButton from "./BackToTopButton";
+import supabase from "./supabaseClient";
+import { fetchPullRequests } from "./githubApi";
+import { useToast } from "./ToastContext";
+import "./App.css";
+
+const GITHUB_OWNER = "robertplaut";
+const GITHUB_REPO = "echostatus";
+
+const initialState = {
+  user: null,
+  userList: [],
+  nameInput: "",
+  displayNameInput: "",
+  email: "",
+  newTeam: "",
+  newRole: "",
+  githubUsername: "",
+  userPullRequests: [],
+  noteDate: new Date().toISOString().split("T")[0],
+  // The old `noteText` is replaced by four new fields
+  yesterdayText: "",
+  todayText: "",
+  blockersText: "",
+  learningsText: "",
+  userNotes: [],
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "RESET_NOTE_FORM":
+      return {
+        ...state,
+        noteDate: new Date().toISOString().split("T")[0],
+        yesterdayText: "",
+        todayText: "",
+        blockersText: "",
+        learningsText: "",
+      };
+    case "SET_FIELD":
+      return { ...state, [action.field]: action.value };
+    case "CREATE_USER_SUCCESS":
+      return {
+        ...state, // <-- Make sure this is here
+        nameInput: "",
+        displayNameInput: "",
+        email: "",
+        newTeam: "",
+        newRole: "",
+        githubUsername: "",
+        userList: [...state.userList, action.payload], // <-- And this
+      };
+    case "LOGIN_SUCCESS":
+      return { ...state, user: action.payload };
+    case "SET_NOTES":
+      return { ...state, userNotes: action.payload };
+    case "LOGOUT":
+      return { ...state, user: null, userNotes: [], userPullRequests: [] };
+    case "SET_USER_LIST":
+      return { ...state, userList: action.payload };
+    case "SET_PULL_REQUESTS":
+      return { ...state, userPullRequests: action.payload };
+    case "SUBMIT_NOTE_SUCCESS":
+      return {
+        ...state,
+        // Clear the four new fields on successful submission
+        yesterdayText: "",
+        todayText: "",
+        blockersText: "",
+        learningsText: "",
+        noteDate: new Date().toISOString().split("T")[0],
+        userNotes: action.payload,
+      };
+    case "UPDATE_USER_SUCCESS":
+      // When a single user is updated, we need to update BOTH the `user` object
+      // for the logged-in user, AND that user's entry in the `userList`.
+      return {
+        ...state,
+        user: action.payload, // Update the currently logged-in user's data
+        // Find the user in the list and replace them with the updated data
+        userList: state.userList.map((u) =>
+          u.id === action.payload.id ? action.payload : u
+        ),
+      };
+    default:
+      return state;
+  }
+}
+
+function DashboardWrapper(props) {
+  const { username } = useParams();
+  const { user, handleQuickLogin } = props;
+  useEffect(() => {
+    if (!user || user.username !== username) {
+      handleQuickLogin(username);
+    }}
+, [username, handleQuickLogin]);
+  if (!user || user.username !== username) {
+    return <div>Loading user dashboard...</div>;
+  }
+  return <DashboardPage {...props} />;
+}
+
+function App() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const {
+    user,
+    userList,
+    nameInput,
+    displayNameInput,
+    email,
+    newTeam,
+    newRole,
+    githubUsername,
+    userPullRequests,
+    noteDate,
+    // Destructure our four new state variables instead of noteText
+    yesterdayText,
+    todayText,
+    blockersText,
+    learningsText,
+    userNotes,
+  } = state;
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { addToast } = useToast();
+
+  const handleQuickLogin = useCallback(
+    async (username) => {
+      // When we log in a new user, always reset the note form to its default state first.
+      dispatch({ type: "RESET_NOTE_FORM" });
+      const { data: userData, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("username", username)
+        .single();
+      if (error || !userData) {
+        addToast("Error logging in. Please try again.", "error");
+        navigate("/");
+        return;
+      }
+      dispatch({ type: "LOGIN_SUCCESS", payload: userData });
+      const notes = await fetchNotesForUser(userData.id);
+      dispatch({ type: "SET_NOTES", payload: notes });
+      navigate(`/user/${userData.username}`);
+    },
+    [navigate, addToast]
+  );
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+
+    // Sanitize the username: convert to lowercase and remove spaces/special chars.
+    const sanitizedUsername = nameInput
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, ""); // Allows letters, numbers, and hyphens
+    const newDisplayName = displayNameInput.trim();
+    const newEmail = email.trim();
+
+    if (
+      !sanitizedUsername ||
+      !newDisplayName ||
+      !newEmail ||
+      !newTeam ||
+      !newRole
+    ) {
+      addToast(
+        "Please fill out all required fields. Note that the username can only contain letters, numbers, and hyphens.",
+        "error",
+        "Validation Error"
+      );
+      return;
+    }
+
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("username", sanitizedUsername)
+      .single();
+    if (existingUser) {
+      addToast("Username already exists. Please choose another.", "error");
+      return;
+    }
+    const newUser = {
+      username: sanitizedUsername, // Use the sanitized username for the database
+      display_name: newDisplayName,
+      email: newEmail,
+      team: newTeam,
+      role: newRole,
+      github_username: githubUsername.trim() || null,
+    };
+    const { error } = await supabase.from("users").insert([newUser]);
+    if (error) {
+      addToast("Error creating user.", "error");
+      console.error("Insert error:", error);
+      return;
+    }
+    dispatch({ type: "CREATE_USER_SUCCESS", payload: newUser });
+    addToast("User successfully created!", "success");
+  };
+
+  const handleLogout = () => {
+    dispatch({ type: "LOGOUT" });
+    navigate("/");
+  };
+
+  const handleProfileUpdate = async (formData) => {
+    if (!user) return; // Safety check
+
+    const { data: updatedUser, error } = await supabase
+      .from("users")
+      .update({
+        display_name: formData.display_name,
+        email: formData.email,
+        team: formData.team,
+        role: formData.role,
+        github_username: formData.github_username || null,
+      })
+      .eq("id", user.id)
+      .select() // Use .select() to get the updated row back from the database
+      .single();
+
+    if (error) {
+      addToast("Failed to update profile.", "error");
+      console.error("Update error:", error);
+      return;
+    }
+
+    // Dispatch an action with the updated user data to refresh the UI
+    dispatch({ type: "UPDATE_USER_SUCCESS", payload: updatedUser });
+    addToast("Profile updated successfully!", "success");
+  };
+
+  const handleSaveSelection = useCallback(
+    async (selectedIds) => {
+      if (!user) return;
+
+      const { data: updatedUser, error } = await supabase
+        .from("users")
+        .update({ selected_user_ids: selectedIds })
+        .eq("id", user.id)
+        .select()
+        .single();
+
+      if (error) {
+        addToast("Failed to save selection.", "error");
+        console.error("Update error:", error);
+        return;
+      }
+
+      dispatch({ type: "UPDATE_USER_SUCCESS", payload: updatedUser });
+      addToast("Selection saved automatically!", "success"); // Toast is back
+    },
+    [user, addToast]
+  );
+
+  const fetchNotesForUser = async (userId) => {
+    if (!userId) return [];
+    const { data, error } = await supabase
+      .from("notes")
+      // Select the new structured columns
+      .select(
+        "id, date, created_at, yesterday_text, today_text, blockers_text, learnings_text"
+      )
+      .eq("user_id", userId)
+      .order("date", { ascending: false }); // Sort by the note's date
+    if (error) {
+      console.error("Error fetching notes:", error);
+      return [];
+    }
+    return Array.isArray(data) ? data : [];
+  };
+
+  const handleNoteSubmit = async (e) => {
+    e.preventDefault();
+    const yesterday = yesterdayText.trim();
+    const today = todayText.trim();
+    const blockers = blockersText.trim();
+    const learnings = learningsText.trim();
+
+    // Validation: Ensure at least one field is filled out.
+    if (!yesterday && !today && !blockers && !learnings) {
+      addToast("Please fill out at least one field to save a note.", "error");
+      return;
+    }
+
+    // "Upsert" logic: Check if a note for this user and date already exists.
+    const { data: existingNote, error: fetchError } = await supabase
+      .from("notes")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("date", noteDate)
+      .single();
+
+    if (fetchError && fetchError.code !== "PGRST116") {
+      // PGRST116 means "No rows found", which is not an error for us.
+      console.error("Error checking for existing note:", fetchError);
+      addToast("Error saving note.", "error");
+      return;
+    }
+
+    let error;
+
+    if (existingNote) {
+      // If a note exists, UPDATE it.
+      const { error: updateError } = await supabase
+        .from("notes")
+        .update({
+          yesterday_text: yesterday,
+          today_text: today,
+          blockers_text: blockers,
+          learnings_text: learnings,
+        })
+        .eq("id", existingNote.id);
+      error = updateError;
+    } else {
+      // If no note exists, INSERT a new one.
+      const { error: insertError } = await supabase.from("notes").insert([
+        {
+          user_id: user.id,
+          date: noteDate,
+          yesterday_text: yesterday,
+          today_text: today,
+          blockers_text: blockers,
+          learnings_text: learnings,
+        },
+      ]);
+      error = insertError;
+    }
+
+    if (error) {
+      addToast("Failed to save note.", "error");
+      console.error("Save error:", error);
+      return;
+    }
+
+    const updatedNotes = await fetchNotesForUser(user.id);
+    dispatch({ type: "SUBMIT_NOTE_SUCCESS", payload: updatedNotes });
+    addToast("Note saved successfully!", "success");
+  };
+
+  // This effect pre-fills the note form when the date changes
+  useEffect(() => {
+    // Find a note in our userNotes array that matches the selected date
+    const noteForSelectedDate = userNotes.find(
+      (note) => note.date === noteDate
+    );
+
+    // If a note is found, fill the form fields with its data
+    if (noteForSelectedDate) {
+      dispatch({
+        type: "SET_FIELD",
+        field: "yesterdayText",
+        value: noteForSelectedDate.yesterday_text || "",
+      });
+      dispatch({
+        type: "SET_FIELD",
+        field: "todayText",
+        value: noteForSelectedDate.today_text || "",
+      });
+      dispatch({
+        type: "SET_FIELD",
+        field: "blockersText",
+        value: noteForSelectedDate.blockers_text || "",
+      });
+      dispatch({
+        type: "SET_FIELD",
+        field: "learningsText",
+        value: noteForSelectedDate.learnings_text || "",
+      });
+    } else {
+      // If no note is found for that date, clear the form fields
+      dispatch({ type: "SET_FIELD", field: "yesterdayText", value: "" });
+      dispatch({ type: "SET_FIELD", field: "todayText", value: "" });
+      dispatch({ type: "SET_FIELD", field: "blockersText", value: "" });
+      dispatch({ type: "SET_FIELD", field: "learningsText", value: "" });
+    }
+  }, [noteDate, userNotes]); // Re-run this effect when the date or notes list changes
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      // We now fetch all users when the app loads, not just on the login page.
+      // We also crucially add 'id' to the select query.
+      const { data, error } = await supabase
+        .from("users")
+        .select(
+          "id, username, team, role, github_username, email, display_name"
+        )
+        .order("display_name", { ascending: true }); // Let's sort by display_name now
+
+      if (error) {
+        console.error("Supabase fetch error:", error.message);
+      } else {
+        dispatch({ type: "SET_USER_LIST", payload: data });
+      }
+    };
+    fetchUsers();
+  }, []); // An empty dependency array ensures this runs only once on mount.
+
+  useEffect(() => {
+    const fetchPRsForUser = async () => {
+      if (!user || !user.github_username) {
+        dispatch({ type: "SET_PULL_REQUESTS", payload: [] });
+        return;
+      }
+      try {
+        const allPRs = await fetchPullRequests(GITHUB_OWNER, GITHUB_REPO);
+        const prs = allPRs.filter(
+          (pr) =>
+            pr.user?.login?.toLowerCase() === user.github_username.toLowerCase()
+        );
+        dispatch({ type: "SET_PULL_REQUESTS", payload: prs });
+      } catch (err) {
+        console.error("GitHub PR fetch failed:", err.message);
+        dispatch({ type: "SET_PULL_REQUESTS", payload: [] });
+      }
+    };
+    fetchPRsForUser();
+  }, [user]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const redirectPath = params.get("path");
+    if (redirectPath) {
+      navigate("/" + redirectPath, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Add a defensive check: only run reduce if userList is an array.
+  const groupedUsers = Array.isArray(userList)
+    ? userList.reduce((acc, u) => {
+        if (!acc[u.team]) acc[u.team] = [];
+        acc[u.team].push(u);
+        return acc;
+      }, {})
+    : {}; // If userList isn't an array, default to an empty object.
+
+  return (
+    <div className="app-container">
+      <div
+        style={{
+          position: "fixed",
+          top: "1.5rem",
+          right: "1.5rem",
+          zIndex: 1000,
+        }}
+      >
+        <ThemeToggle />
+      </div>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <LoginPage
+              groupedUsers={groupedUsers}
+              handleQuickLogin={handleQuickLogin}
+              handleCreateUser={handleCreateUser}
+              nameInput={nameInput}
+              displayNameInput={displayNameInput}
+              email={email}
+              newTeam={newTeam}
+              newRole={newRole}
+              githubUsername={githubUsername}
+              dispatch={dispatch}
+            />
+          }
+        />
+        <Route
+          path="/user/:username"
+          element={
+            <DashboardWrapper
+              user={user}
+              userList={userList}
+              handleQuickLogin={handleQuickLogin}
+              handleLogout={handleLogout}
+              // 3. Pass the new handler function down as a prop
+              handleProfileUpdate={handleProfileUpdate}
+              handleSaveSelection={handleSaveSelection}
+              userPullRequests={userPullRequests}
+              userNotes={userNotes}
+              noteDate={noteDate}
+              yesterdayText={yesterdayText}
+              todayText={todayText}
+              blockersText={blockersText}
+              learningsText={learningsText}
+              handleNoteSubmit={handleNoteSubmit}
+              dispatch={dispatch}
+            />
+          }
+        />
+      </Routes>
+
+      <BackToTopButton />
+    </div>
+  );
+}
+
+export default App;
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\src\DashboardPage.js ---
+
+// src/DashboardPage.js
+
+import React from "react";
+import CounterButton from "./CounterButton";
+import GitHubPRList from "./GitHubPRList";
+import EditProfileForm from "./EditProfileForm";
+import SummaryAggregator from "./SummaryAggregator";
+import AggregatedSummary from "./AggregatedSummary";
+
+function DashboardPage({
+  user,
+  userList,
+  handleLogout,
+  userPullRequests,
+  userNotes,
+  noteDate,
+  yesterdayText,
+  todayText,
+  blockersText,
+  learningsText,
+  handleNoteSubmit,
+  handleProfileUpdate,
+  handleSaveSelection,
+  dispatch,
+}) {
+  return (
+    <div>
+      <header className="app-header">
+        <div>
+          <h1>Welcome, {user.display_name}!</h1>
+          <p
+            style={{
+              margin: "0.25rem 0 0 0",
+              color: "var(--color-text-secondary)",
+              fontSize: "1rem",
+            }}
+          >
+            {user.role} - {user.team}
+          </p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <CounterButton
+            label="Logout"
+            onClick={handleLogout}
+            className="btn btn-logout"
+          />
+        </div>
+      </header>
+
+      <div className="dashboard-grid">
+        {/* --- Daily Standup Note FORM Widget --- */}
+        <div className="widget-card">
+          <div className="widget-header">
+            <h2>📝 Daily Standup Note</h2>
+          </div>
+          <form onSubmit={handleNoteSubmit}>
+            <div className="form-group">
+              <label htmlFor="note-date">Date</label>
+              <input
+                id="note-date"
+                type="date"
+                value={noteDate}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    field: "noteDate",
+                    value: e.target.value,
+                  })
+                }
+              />
+            </div>
+            {/* Yesterday */}
+            <div className="form-group">
+              <label htmlFor="yesterday-text">
+                What did you accomplish yesterday?
+              </label>
+              <textarea
+                id="yesterday-text"
+                value={yesterdayText}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    field: "yesterdayText",
+                    value: e.target.value,
+                  })
+                }
+                rows="3"
+              />
+            </div>
+            {/* Today */}
+            <div className="form-group">
+              <label htmlFor="today-text">What are you working on today?</label>
+              <textarea
+                id="today-text"
+                value={todayText}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    field: "todayText",
+                    value: e.target.value,
+                  })
+                }
+                rows="3"
+              />
+            </div>
+            {/* Blockers */}
+            <div className="form-group">
+              <label htmlFor="blockers-text">Do you have any blockers?</label>
+              <textarea
+                id="blockers-text"
+                value={blockersText}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    field: "blockersText",
+                    value: e.target.value,
+                  })
+                }
+                rows="2"
+              />
+            </div>
+            {/* Learnings */}
+            <div className="form-group">
+              <label htmlFor="learnings-text">Learnings / Other Notes</label>
+              <textarea
+                id="learnings-text"
+                value={learningsText}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    field: "learningsText",
+                    value: e.target.value,
+                  })
+                }
+                rows="2"
+              />
+            </div>
+            <button type="submit" className="btn">
+              Save Note
+            </button>
+            <p
+              style={{
+                fontSize: "0.875rem",
+                color: "var(--color-text-secondary)",
+                marginTop: "1rem",
+                textAlign: "left",
+              }}
+            >
+              Notes:
+              <ul>
+                <li>
+                  All fields are optional, but at least one must be used to
+                  save.
+                </li>
+                <li>You may update notes from past dates if needed</li>
+                <li>After saving past note, form returns to today's date</li>
+              </ul>
+            </p>
+          </form>
+        </div>
+
+        {/* --- Past Notes LIST Widget --- */}
+        <div className="widget-card">
+          <div className="widget-header">
+            <h2>Past Notes</h2>
+          </div>
+          <div className="widget-scroll-container">
+            {userNotes.length === 0 ? (
+              <p>No notes yet.</p>
+            ) : (
+              <ul style={{ listStyle: "none", paddingLeft: 0 }}>
+                {userNotes.map((note) => (
+                  <li
+                    key={note.id}
+                    style={{
+                      marginBottom: "1rem",
+                      padding: "1rem",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "8px",
+                      backgroundColor: "var(--color-background)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "1em",
+                        color: "var(--color-dark)",
+                        fontWeight: "700",
+                        marginBottom: "0.75rem",
+                      }}
+                    >
+                      {new Date(note.date + "T00:00:00").toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          timeZone: "UTC",
+                        }
+                      )}
+                    </div>
+                    {note.yesterday_text && (
+                      <div style={{ marginBottom: "0.5rem" }}>
+                        <strong
+                          style={{ color: "var(--color-text-secondary)" }}
+                        >
+                          Yesterday:
+                        </strong>
+                        <div
+                          style={{
+                            whiteSpace: "pre-wrap",
+                            color: "var(--color-text-primary)",
+                          }}
+                        >
+                          {note.yesterday_text}
+                        </div>
+                      </div>
+                    )}
+                    {note.today_text && (
+                      <div style={{ marginBottom: "0.5rem" }}>
+                        <strong
+                          style={{ color: "var(--color-text-secondary)" }}
+                        >
+                          Today:
+                        </strong>
+                        <div
+                          style={{
+                            whiteSpace: "pre-wrap",
+                            color: "var(--color-text-primary)",
+                          }}
+                        >
+                          {note.today_text}
+                        </div>
+                      </div>
+                    )}
+                    {note.blockers_text && (
+                      <div style={{ marginBottom: "0.5rem" }}>
+                        <strong
+                          style={{ color: "var(--color-text-secondary)" }}
+                        >
+                          Blocker(s):
+                        </strong>
+                        <div
+                          style={{
+                            whiteSpace: "pre-wrap",
+                            color: "var(--color-text-primary)",
+                          }}
+                        >
+                          {note.blockers_text}
+                        </div>
+                      </div>
+                    )}
+                    {note.learnings_text && (
+                      <div style={{ marginBottom: "0.5rem" }}>
+                        <strong
+                          style={{ color: "var(--color-text-secondary)" }}
+                        >
+                          Learning(s):
+                        </strong>
+                        <div
+                          style={{
+                            whiteSpace: "pre-wrap",
+                            color: "var(--color-text-primary)",
+                          }}
+                        >
+                          {note.learnings_text}
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* --- GitHub PRs Widget --- */}
+        <div className="widget-card">
+          <GitHubPRList user={user} pullRequests={userPullRequests} />
+        </div>
+
+        {/* --- Edit Profile & Summary Aggregator Widgets --- */}
+        <EditProfileForm user={user} onSave={handleProfileUpdate} />
+
+        {/* --- Aggregated Summary View Widget --- */}
+        <div className="widget-card">
+          <AggregatedSummary user={user} userNotes={userNotes} />
+        </div>
+
+        <SummaryAggregator
+          user={user}
+          userList={userList}
+          onSaveSelection={handleSaveSelection}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default DashboardPage;
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\src\GitHubPRList.js ---
+
+// src/GitHubPRList.js
+
+// 1. Import useState to manage which PRs are expanded
+import React, { useState } from "react";
+
+const GitHubPRList = ({ user, pullRequests }) => {
+  // 2. State to track the IDs of expanded PRs
+  const [expandedPRs, setExpandedPRs] = useState({});
+
+  // 3. Function to toggle the expanded state for a single PR
+  const toggleDetails = (prId) => {
+    setExpandedPRs((prev) => ({
+      ...prev,
+      [prId]: !prev[prId], // Set the PR's expanded state to the opposite of what it was
+    }));
+  };
+
+  if (!pullRequests || pullRequests.length === 0) {
+    return (
+      <div>
+        <div className="widget-header">
+          <h2 style={{ display: "flex", alignItems: "center" }}>
+            <svg
+              version="1.1"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 97.6 96"
+              width="20"
+              height="20"
+              fill="currentColor"
+              style={{ marginRight: "0.75rem" }}
+            >
+              <path d="M48.9,0C21.8,0,0,22,0,49.2C0,71,14,89.4,33.4,95.9c2.4,0.5,3.3-1.1,3.3-2.4c0-1.1-0.1-5.1-0.1-9.1 c-13.6,2.9-16.4-5.9-16.4-5.9c-2.2-5.7-5.4-7.2-5.4-7.2c-4.4-3,0.3-3,0.3-3c4.9,0.3,7.5,5.1,7.5,5.1c4.4,7.5,11.4,5.4,14.2,4.1 c0.4-3.2,1.7-5.4,3.1-6.6c-10.8-1.1-22.2-5.4-22.2-24.3c0-5.4,1.9-9.8,5-13.2c-0.5-1.2-2.2-6.3,0.5-13c0,0,4.1-1.3,13.4,5.1 c3.9-1.1,8.1-1.6,12.2-1.6s8.3,0.6,12.2,1.6c9.3-6.4,13.4-5.1,13.4-5.1c2.7,6.8,1,11.8,0.5,13c3.2,3.4,5,7.8,5,13.2 c0,18.9-11.4,23.1-22.3,24.3c1.8,1.5,3.3,4.5,3.3,9.1c0,6.6-0.1,11.9-0.1,13.5c0,1.3,0.9,2.9,3.3,2.4C83.6,89.4,97.6,71,97.6,49.2 C97.7,22,75.8,0,48.9,0z" />
+            </svg>
+            GitHub Pull Requests
+            {user.github_username && ` - ${user.github_username}`}
+          </h2>
+        </div>
+        <p>No pull requests found for this user.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="widget-header">
+        <h2 style={{ display: "flex", alignItems: "center" }}>
+          <svg
+            version="1.1"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 97.6 96"
+            width="20"
+            height="20"
+            fill="currentColor"
+            style={{ marginRight: "0.75rem" }}
+          >
+            <path d="M48.9,0C21.8,0,0,22,0,49.2C0,71,14,89.4,33.4,95.9c2.4,0.5,3.3-1.1,3.3-2.4c0-1.1-0.1-5.1-0.1-9.1 c-13.6,2.9-16.4-5.9-16.4-5.9c-2.2-5.7-5.4-7.2-5.4-7.2c-4.4-3,0.3-3,0.3-3c4.9,0.3,7.5,5.1,7.5,5.1c4.4,7.5,11.4,5.4,14.2,4.1 c0.4-3.2,1.7-5.4,3.1-6.6c-10.8-1.1-22.2-5.4-22.2-24.3c0-5.4,1.9-9.8,5-13.2c-0.5-1.2-2.2-6.3,0.5-13c0,0,4.1-1.3,13.4,5.1 c3.9-1.1,8.1-1.6,12.2-1.6s8.3,0.6,12.2,1.6c9.3-6.4,13.4-5.1,13.4-5.1c2.7,6.8,1,11.8,0.5,13c3.2,3.4,5,7.8,5,13.2 c0,18.9-11.4,23.1-22.3,24.3c1.8,1.5,3.3,4.5,3.3,9.1c0,6.6-0.1,11.9-0.1,13.5c0,1.3,0.9,2.9,3.3,2.4C83.6,89.4,97.6,71,97.6,49.2 C97.7,22,75.8,0,48.9,0z" />
+          </svg>
+          GitHub Pull Requests
+          {user.github_username && ` - ${user.github_username}`}
+        </h2>
+      </div>
+      <div className="widget-scroll-container">
+        <ul style={{ listStyle: "none", padding: 0 }}>
+          {pullRequests.map((pr) => {
+            // Check if the current PR is expanded
+            const isExpanded = !!expandedPRs[pr.id];
+
+            return (
+              <li
+                key={pr.id}
+                style={{
+                  marginBottom: "1rem",
+                  paddingBottom: "1rem",
+                  borderBottom: "1px solid var(--color-border)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  {/* 4. Add the author's GitHub avatar */}
+                  <img
+                    src={pr.user.avatar_url}
+                    alt={pr.user.login}
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      marginRight: "10px",
+                    }}
+                  />
+                  <div>
+                    <a
+                      href={pr.html_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        fontWeight: "bold",
+                        color: "var(--color-primary)",
+                        textDecoration: "none",
+                        fontSize: "1.1rem",
+                      }}
+                    >
+                      #{pr.number}: {pr.title}
+                    </a>
+                    {/* 5. Add author's username and the PR creation date */}
+                    <div
+                      style={{
+                        fontSize: "0.85em",
+                        color: "var(--color-text-secondary)",
+                      }}
+                    >
+                      by <strong>{pr.user.login}</strong> on{" "}
+                      {new Date(pr.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "0.9em",
+                    color: "var(--color-text-secondary)",
+                    marginLeft: "42px",
+                  }}
+                >
+                  Status:{" "}
+                  <strong style={{ color: "var(--color-text-primary)" }}>
+                    {pr.state}
+                  </strong>{" "}
+                  | Merged: {pr.merged_at ? "✅ Yes" : "❌ No"}
+                  {/* 6. The Toggle Button */}
+                  <button
+                    onClick={() => toggleDetails(pr.id)}
+                    style={{
+                      marginLeft: "1rem",
+                      background: "none",
+                      border: "none",
+                      color: "var(--color-primary)",
+                      cursor: "pointer",
+                      padding: "0",
+                      fontSize: "0.9em",
+                    }}
+                  >
+                    {isExpanded ? "Hide Details" : "Show Details"}
+                  </button>
+                </div>
+
+                {/* 7. Conditionally render the PR body (description) */}
+                {isExpanded && (
+                  <div
+                    style={{
+                      background: "var(--color-background)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "6px",
+                      padding: "1rem",
+                      marginTop: "1rem",
+                      marginLeft: "42px",
+                    }}
+                  >
+                    {/* Using <pre> preserves line breaks and spacing from the description */}
+                    <pre
+                      style={{
+                        margin: 0,
+                        whiteSpace: "pre-wrap",
+                        fontFamily: "inherit",
+                        color: "var(--color-text-primary)",
+                      }}
+                    >
+                      {pr.body || "No description provided."}
+                    </pre>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+export default GitHubPRList;
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\src\LoginPage.js ---
+
+// src/LoginPage.js
+
+import React from "react";
+import { Link } from "react-router-dom";
+
+function LoginPage({
+  groupedUsers,
+  handleQuickLogin,
+  handleCreateUser,
+  nameInput,
+  displayNameInput,
+  newTeam,
+  newRole,
+  githubUsername,
+  email,
+  dispatch,
+}) {
+  return (
+    <div>
+      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+        <h1 style={{ fontSize: "2.5rem", color: "var(--color-dark)" }}>
+          Welcome to Echostatus
+        </h1>
+        <p style={{ fontSize: "1.1rem", color: "var(--color-text-secondary)" }}>
+          Select a user to begin, or{" "}
+          <a href="#create-user-form" style={{ color: "var(--color-primary)" }}>
+            create a new user below
+          </a>
+          .
+        </p>
+      </div>
+
+      {/* User Selection Grid */}
+      {Object.keys(groupedUsers).length > 0 ? (
+        Object.keys(groupedUsers)
+          .sort()
+          .map((team) => (
+            <div key={team} style={{ marginBottom: "3rem" }}>
+              <h2
+                style={{
+                  fontSize: "1.5rem",
+                  paddingBottom: "0.5rem",
+                  borderBottom: "1px solid var(--color-border)",
+                }}
+              >
+                {team}
+              </h2>
+              <div className="user-card-grid" style={{ marginTop: "1.5rem" }}>
+                {groupedUsers[team].map((userObj) => (
+                  <Link
+                    key={userObj.username}
+                    to={`/user/${userObj.username}`}
+                    className="user-card"
+                    style={{ textDecoration: "none" }}
+                  >
+                    <img
+                      src={`https://api.dicebear.com/6.x/thumbs/svg?seed=${userObj.username}`}
+                      alt={userObj.username}
+                      className="avatar-img"
+                    />
+                    <div className="user-name">{userObj.display_name}</div>
+                    <div className="user-role">{userObj.role}</div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))
+      ) : (
+        <p style={{ textAlign: "center" }}>
+          No users found. Please create one to get started.
+        </p>
+      )}
+
+      <hr />
+
+      {/* New User Creation Form */}
+      <div id="create-user-form" className="widget-card">
+        <h2>Create New User</h2>
+        <form onSubmit={handleCreateUser}>
+          <div className="form-group">
+            <label htmlFor="new-display-name">Display Name *</label>
+            <input
+              id="new-display-name"
+              type="text"
+              placeholder="e.g., Jane Doe"
+              value={displayNameInput}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "displayNameInput",
+                  value: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="new-username">
+              Username (Must be lowercase with no spaces or special characters,
+              will be used for URL path) *
+            </label>
+            <input
+              id="new-username"
+              type="text"
+              placeholder="e.g., janedoe"
+              value={nameInput}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "nameInput",
+                  value: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="new-email">Email *</label>
+            <input
+              id="new-email"
+              type="email" // Using type="email" gives basic browser validation
+              placeholder="e.g., jane.doe@example.com"
+              value={email}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "email",
+                  value: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="new-team">Team *</label>
+            <select
+              id="new-team"
+              value={newTeam}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "newTeam",
+                  value: e.target.value,
+                })
+              }
+            >
+              <option value="">Select Team...</option>
+              <option value="ENGINEERING">ENGINEERING</option>
+              <option value="PMO">PMO</option>
+              <option value="PRODUCT">PRODUCT</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="new-role">Role *</label>
+            <select
+              id="new-role"
+              value={newRole}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "newRole",
+                  value: e.target.value,
+                })
+              }
+            >
+              <option value="">Select Role...</option>
+              <option value="Engineer">Engineer</option>
+              <option value="Senior Director of Engineering">
+                Senior Director of Engineering
+              </option>
+              <option value="Senior Product Manager">
+                Senior Product Manager
+              </option>
+              <option value="Program Manager">Program Manager</option>
+              <option value="VP of Product">VP of Product</option>
+              <option value="VP of PMO">VP of PMO</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="new-github">GitHub Username (optional)</label>
+            <input
+              id="new-github"
+              type="text"
+              placeholder="e.g., janedoe-github"
+              value={githubUsername}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "githubUsername",
+                  value: e.target.value,
+                })
+              }
+            />
+          </div>
+          <button type="submit" className="btn">
+            Create User
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default LoginPage;
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\src\ToastProvider.js ---
+
+// src/ToastProvider.js
+
+import React, { useState, useCallback, useEffect } from 'react'
+import ToastContext from './ToastContext'
+import './Toast.css' // Import our new styles
+
+// --- Individual Toast Component ---
+const Toast = ({ toast, onRemove }) => {
+  const [isExiting, setIsExiting] = useState(false)
+
+  // This function will now handle the start of the exit process
+  const startExit = useCallback(() => {
+    setIsExiting(true)
+    // Set a timeout that matches the CSS animation duration
+    setTimeout(() => {
+      onRemove(toast.id)
+    }, 500) // 500ms = 0.5s
+  }, [toast.id, onRemove])
+
+  // Auto-dismiss timer
+  useEffect(() => {
+    // If the toast is already exiting, don't start a new timer
+    if (isExiting) return
+
+    const timer = setTimeout(() => {
+      startExit()
+    }, 4500) // Start exit animation after 4.5 seconds
+
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [isExiting, startExit])
+
+  // Combine the base class with the exiting class if needed
+  const toastClassName = `toast-item ${toast.type} ${
+    isExiting ? 'exiting' : ''
+  }`
+
+  return (
+    <div className={toastClassName}>
+      <h3>{toast.title}</h3>
+      <p>{toast.message}</p>
+      {/* The close button now also just starts the exit animation */}
+      <button onClick={startExit} className="toast-close-button">
+        ×
+      </button>
+    </div>
+  )
+}
+
+// --- Toast Container Component ---
+const ToastContainer = ({ toasts, onRemove }) => {
+  return (
+    <div className="toast-container">
+      {toasts.map((toast) => (
+        <Toast key={toast.id} toast={toast} onRemove={onRemove} />
+      ))}
+    </div>
+  )
+}
+
+// --- Toast Provider Component ---
+export const ToastProvider = ({ children }) => {
+  const [toasts, setToasts] = useState([])
+
+  // useCallback ensures these functions aren't recreated on every render,
+  // which is a good practice for functions passed down in context.
+  const removeToast = useCallback((id) => {
+    setToasts((currentToasts) =>
+      currentToasts.filter((toast) => toast.id !== id)
+    )
+  }, [])
+
+  const addToast = useCallback((message, type = 'success', title = '') => {
+    const id = Date.now() // Simple unique ID
+    const toastTitle =
+      title || (type === 'success' ? 'Success!' : 'An Error Occurred')
+
+    setToasts((currentToasts) => [
+      ...currentToasts,
+      { id, message, type, title: toastTitle },
+    ])
+  }, [])
+
+  return (
+    <ToastContext.Provider value={{ addToast }}>
+      {children}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+    </ToastContext.Provider>
+  )
+}
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\src\UserManager.js ---
+
+import React, { useEffect, useState } from 'react';
+import supabase from './supabaseClient';
+
+function UserManager({ refreshTrigger }) {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('username, counter')
+        .order('username', { ascending: true });
+
+      if (error) {
+        console.error("Error fetching users:", error);
+        setUsers([]);
+      } else {
+        setUsers(data);
+      }
+      setLoading(false);
+    };
+
+    fetchUsers();
+  }, [refreshTrigger]); // now refetches whenever this changes
+
+
+  if (loading) return <p style={{ marginTop: '40px' }}>Loading users...</p>;
+  if (users.length === 0) return <p style={{ marginTop: '40px' }}>No users found.</p>;
+
+  return (
+    <div style={{ marginTop: '40px' }}>
+      <h2>📋 All Users and Their Counters</h2>
+      <table style={{
+        margin: '0 auto',
+        borderCollapse: 'collapse',
+        width: '60%',
+        fontFamily: 'Arial, sans-serif'
+      }}>
+        <thead>
+          <tr>
+            <th style={tableHeaderStyle}>Username</th>
+            <th style={tableHeaderStyle}>Counter</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map(({ username, counter }) => (
+            <tr key={username}>
+              <td style={tableCellStyle}>{username}</td>
+              <td style={tableCellStyle}>{counter}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+const tableHeaderStyle = {
+  backgroundColor: '#f2f2f2',
+  padding: '10px',
+  borderBottom: '2px solid #ddd',
+  textAlign: 'left'
+};
+
+const tableCellStyle = {
+  padding: '8px 12px',
+  borderBottom: '1px solid #ddd'
+};
+
+export default UserManager;
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\src\githubApi.js ---
+
+// src/githubApi.js
+
+const GITHUB_API_BASE = "https://api.github.com";
+
+export const fetchPullRequests = async (owner, repo) => {
+  const response = await fetch(
+    `${GITHUB_API_BASE}/repos/${owner}/${repo}/pulls?state=all`
+  );
+  if (!response.ok) {
+    throw new Error(`GitHub API error: ${response.status}`);
+  }
+  return response.json();
+};
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\src\index.js ---
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import './index.css'
+import App from './App'
+import { ToastProvider } from './ToastProvider'
+import reportWebVitals from './reportWebVitals'
+
+const root = ReactDOM.createRoot(document.getElementById('root'))
+root.render(
+  <React.StrictMode>
+    <ToastProvider>
+      <BrowserRouter basename="/echostatus">
+        <App />
+      </BrowserRouter>
+    </ToastProvider>
+  </React.StrictMode>
+)
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals(console.log)
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\src\supabaseClient.js ---
+
+import { createClient } from '@supabase/supabase-js'
+
+// Read the variables from the environment
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+export default supabase
+
+
+--- C:\Users\rober\Documents\Project Echostatus\echostatus\src\useTheme.js ---
+
+// src/useTheme.js
+
+import { useState, useEffect } from 'react'
+
+export const useTheme = () => {
+  // 1. Get user's preference from localStorage, or default to 'light'
+  const [theme, setTheme] = useState(() => {
+    const storedTheme = window.localStorage.getItem('theme')
+    return storedTheme !== null ? storedTheme : 'light'
+  })
+
+  // 2. An effect that runs when the theme state changes
+  useEffect(() => {
+    // Set the data-theme attribute on the body element
+    document.documentElement.setAttribute('data-theme', theme)
+
+    // Save the user's preference to localStorage
+    window.localStorage.setItem('theme', theme)
+  }, [theme]) // Only re-run this effect if `theme` changes
+
+  // 3. The function to toggle the theme
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'))
+  }
+
+  // 4. Return the current theme and the toggle function
+  return { theme, toggleTheme }
+}

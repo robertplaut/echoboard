@@ -52,6 +52,12 @@ function LoginPage({
                     to={`/user/${userObj.username}`}
                     className="user-card"
                     style={{ textDecoration: "none" }}
+                    onClick={(e) => {
+                      // Prevent the link from navigating immediately
+                      e.preventDefault();
+                      // Manually call our login function
+                      handleQuickLogin(userObj.username);
+                    }}
                   >
                     <img
                       src={`https://api.dicebear.com/6.x/thumbs/svg?seed=${userObj.username}`}
