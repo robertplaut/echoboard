@@ -2,16 +2,21 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = ({ user, children }) => {
-  // If there is no user object, redirect the user to the login page ('/').
-  // The 'replace' prop is important; it replaces the current entry in the
-  // history stack instead of pushing a new one. This prevents the user from
-  // clicking the "back" button and ending up in a broken state.
+const ProtectedRoute = ({ user, isAuthenticating, children }) => {
+  // 1. If the app is in the middle of trying to log the user in,
+  //    show a generic loading message.
+  if (isAuthenticating) {
+    return <div>Loading...</div>;
+  }
+
+  // 2. If authentication is finished AND there is still no user,
+  //    it's safe to redirect to the login page.
   if (!user) {
     return <Navigate to="/" replace />;
   }
 
-  // If there is a user, render the child components that were passed in.
+  // 3. If authentication is finished and there IS a user,
+  //    render the child components.
   return children;
 };
 
