@@ -22,6 +22,7 @@ const GITHUB_OWNER = process.env.REACT_APP_GITHUB_OWNER;
 const GITHUB_REPO = process.env.REACT_APP_GITHUB_REPO;
 
 const initialState = {
+  isAuthenticating: true,
   user: null,
   userList: [],
   nameInput: "",
@@ -42,6 +43,8 @@ const initialState = {
 
 function reducer(state, action) {
   switch (action.type) {
+    case "SET_AUTHENTICATING":
+      return { ...state, isAuthenticating: action.payload };
     case "RESET_NOTE_FORM":
       return {
         ...state,
@@ -101,24 +104,11 @@ function reducer(state, action) {
   }
 }
 
-function DashboardWrapper(props) {
-  const { username } = useParams();
-  const { user, handleQuickLogin } = props;
-  useEffect(() => {
-    if (!user || user.username !== username) {
-      handleQuickLogin(username);
-    }
-  }, [username, handleQuickLogin, user]);
-  if (!user || user.username !== username) {
-    return <div>Loading user dashboard...</div>;
-  }
-  return <DashboardPage {...props} />;
-}
-
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const {
+    isAuthenticating,
     user,
     userList,
     nameInput,
@@ -414,6 +404,34 @@ function App() {
     fetchUsers();
   }, []); // An empty dependency array ensures this runs only once on mount.
 
+  // This effect runs once on app load to handle deep links
+  useEffect(() => {
+    // A function to check the URL and attempt to log in
+    const authenticateFromUrl = async () => {
+      const pathParts = window.location.pathname.split("/").filter(Boolean);
+      // In development, with BrowserRouter, pathParts might look like ['user', 'robert']
+      // On Netlify, it might be ['echostatus', 'user', 'robert'] if basename was still there, but now it will be the same.
+      const userIndex = pathParts.indexOf("user");
+
+      // Check if the URL is a user-specific path
+      if (userIndex !== -1 && pathParts.length > userIndex + 1) {
+        const username = pathParts[userIndex + 1];
+        if (username) {
+          // If we have a username, call handleQuickLogin.
+          // handleQuickLogin will fetch the user, set the state, and navigate.
+          await handleQuickLogin(username);
+        }
+      }
+      // VERY IMPORTANT: After the check is done, set authenticating to false.
+      dispatch({ type: "SET_AUTHENTICATING", payload: false });
+    };
+
+    authenticateFromUrl();
+    // We disable the linting rule here because we truly only want this
+    // effect to run exactly once when the app first loads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const fetchPRsForUser = async () => {
       if (!user || !user.github_username) {
@@ -434,15 +452,6 @@ function App() {
     };
     fetchPRsForUser();
   }, [user]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const redirectPath = params.get("path");
-    if (redirectPath) {
-      navigate("/" + redirectPath, { replace: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Add a defensive check: only run reduce if userList is an array.
   const groupedUsers = Array.isArray(userList)
@@ -486,11 +495,10 @@ function App() {
         <Route
           path="/user/:username"
           element={
-            <ProtectedRoute user={user}>
-              <DashboardWrapper
+            <ProtectedRoute user={user} isAuthenticating={isAuthenticating}>
+              <DashboardPage
                 user={user}
                 userList={userList}
-                handleQuickLogin={handleQuickLogin}
                 handleLogout={handleLogout}
                 handleProfileUpdate={handleProfileUpdate}
                 handleSaveSelection={handleSaveSelection}
