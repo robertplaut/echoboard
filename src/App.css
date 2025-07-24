@@ -254,3 +254,11 @@ hr {
   padding: 0.25rem 0.75rem;
   font-size: 0.875rem;
 }
+
+/* Always-highlighted style for the date input */
+input[type="date"] {
+  border: 1px solid rgba(81, 203, 238, 1);
+  box-shadow: 0 0 6px rgba(81, 203, 238, 1);
+  background-color: #ffffff;
+  transition: all 0.3s ease-in-out;
+}
