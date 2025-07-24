@@ -2,7 +2,6 @@
   "name": "echostatus",
   "version": "2.2.0",
   "private": true,
-  "homepage": "https://robertplaut.github.io/echostatus",
   "dependencies": {
     "@supabase/supabase-js": "^2.50.3",
     "@testing-library/dom": "^10.4.0",
@@ -15,16 +14,12 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
-  "devDependencies": {
-    "gh-pages": "^6.3.0"
-  },
+  "devDependencies": {},
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
     "release": "standard-version"
   },
   "eslintConfig": {
