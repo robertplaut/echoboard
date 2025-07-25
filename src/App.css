@@ -60,7 +60,7 @@
 
 .widget-header {
   background-color: var(
-    --color-background
+    --color-header-background
   ); /* Use the main app background for a subtle contrast */
   padding: 1rem 1.5rem;
   margin: -1.5rem -1.5rem 1.5rem -1.5rem; /* Pull header to the edges of the card */
@@ -261,4 +261,61 @@ input[type="date"] {
   box-shadow: 0 0 6px rgba(81, 203, 238, 1);
   background-color: #ffffff;
   transition: all 0.3s ease-in-out;
+}
+
+/* For tucked-corner widgets */
+.tucked-corners {
+  position: relative;
+  overflow: visible;
+  z-index: 0;
+}
+
+/* Top and bottom corners using span elements */
+.corner {
+  position: absolute;
+  width: 100px;
+  height: 50px;
+  background: var(--color-background);
+  z-index: 0;
+}
+
+/* Top left corner */
+.corner.top-left {
+  top: -10px;
+  left: -35px;
+  width: 85px;
+  height: 20px;
+  transform: rotate(-45deg);
+  background: var(--color-background);
+  box-shadow: 0 5px 5px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* Top right corner */
+.corner.top-right {
+  top: -10px;
+  right: -35px;
+  width: 85px;
+  height: 20px;
+  transform: rotate(45deg);
+  box-shadow: 0 5px 5px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* Bottom left corner */
+.corner.bottom-left {
+  bottom: 0px;
+  left: -38px;
+  width: 85px;
+  height: 20px;
+  transform: rotate(45deg);
+  box-shadow: 0 -5px 10px -7px rgba(0, 0, 0, 0.5);
+}
+
+/* Bottom right corner */
+.corner.bottom-right {
+  bottom: 0px;
+  right: -38px;
+  width: 85px;
+  height: 20px;
+  transform: rotate(-45deg);
+  box-shadow: 0 -5px 10px -7px rgba(0, 0, 0, 0.5);
 }
