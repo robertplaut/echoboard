@@ -344,3 +344,27 @@ input[type="date"] {
     inset: 0;
   }
 }
+
+/* --- Login Page Tour Button --- */
+.tour-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.tour-button:hover {
+  color: var(--color-primary);
+  background-color: var(--color-background-offset, var(--color-background));
+  border-color: var(--color-border);
+}

@@ -9,6 +9,7 @@ import BackToTopButton from "./BackToTopButton";
 import supabase from "./supabaseClient";
 import ProtectedRoute from "./ProtectedRoute";
 import VerticalNav from "./VerticalNav";
+import LoginTour from "./LoginTour";
 import { fetchPullRequests } from "./githubApi";
 import { useToast } from "./ToastContext";
 import "./App.css";
@@ -629,18 +630,20 @@ Standup notes for ${displayName}:
         <Route
           path="/"
           element={
-            <LoginPage
-              groupedUsers={groupedUsers}
-              handleQuickLogin={handleQuickLogin}
-              handleCreateUser={handleCreateUser}
-              nameInput={nameInput}
-              displayNameInput={displayNameInput}
-              email={email}
-              newTeam={newTeam}
-              newRole={newRole}
-              githubUsername={githubUsername}
-              dispatch={dispatch}
-            />
+            <LoginTour>
+              <LoginPage
+                groupedUsers={groupedUsers}
+                handleQuickLogin={handleQuickLogin}
+                handleCreateUser={handleCreateUser}
+                nameInput={nameInput}
+                displayNameInput={displayNameInput}
+                email={email}
+                newTeam={newTeam}
+                newRole={newRole}
+                githubUsername={githubUsername}
+                dispatch={dispatch}
+              />
+            </LoginTour>
           }
         />
         <Route
