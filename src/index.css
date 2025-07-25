@@ -97,3 +97,8 @@ body::before {
   /* Opacity waits for the background to finish its transition before fading in */
   transition: color 0.3s ease, opacity 0.3s ease 0.3s;
 }
+
+/* Utility class to disable all page scrolling */
+.tour-scroll-lock {
+  overflow: hidden !important;
+}

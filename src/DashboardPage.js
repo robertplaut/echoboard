@@ -1,6 +1,7 @@
 // src/DashboardPage.js
 
 import React, { useEffect } from "react";
+import { useTour } from "./TourContext";
 import CounterButton from "./CounterButton";
 import GitHubPRList from "./GitHubPRList";
 import EditProfileForm from "./EditProfileForm";
@@ -23,7 +24,6 @@ function DashboardPage({
   handleProfileUpdate,
   handleSaveSelection,
   dispatch,
-  // Add the new props here
   isSummarizing,
   aiSummary,
   aiError,
@@ -33,7 +33,52 @@ function DashboardPage({
 }) {
   useEffect(() => {
     dispatch({ type: "CLEAR_AI_SUMMARY" });
-  }, [user.id, dispatch]); // ✅ Fixed
+  }, [user.id, dispatch]);
+
+  const { startTour } = useTour();
+
+  // Define the steps specifically for the dashboard tour
+  const dashboardTourSteps = [
+    {
+      selector: '[data-tour-id="daily-note"]',
+      content:
+        "Here is where you will input your updates for the current day. You may also use this form to update an older entry.",
+    },
+    {
+      selector: '[data-tour-id="past-notes"]',
+      content:
+        "This is where you can find all the notes you've added to Echostatus, listed in reverse-chronological order.",
+    },
+    {
+      selector: '[data-tour-id="github-prs"]',
+      content:
+        "We use your GitHub username to find all your Pull Requests for the project and list them here for easy access.",
+    },
+    {
+      selector: '[data-tour-id="edit-profile"]',
+      content:
+        "You can update any field in your profile except for your username. Changes are saved instantly.",
+    },
+    {
+      selector: '[data-tour-id="summary-aggregator"]',
+      content:
+        "You have total control over which teammates' notes appear in the summary views. Just check the boxes next to their names.",
+    },
+    {
+      selector: '[data-tour-id="aggregated-summary"]',
+      content:
+        "This view provides a real-time feed of all notes from the users you selected in the aggregator.",
+    },
+    {
+      selector: '[data-tour-id="ai-summary"]',
+      content:
+        "After selecting users, you can generate an AI-powered summary of their notes from today for a quick overview.",
+    },
+  ];
+
+  const handleStartTour = () => {
+    startTour(dashboardTourSteps);
+  };
 
   return (
     <div>
@@ -51,6 +96,28 @@ function DashboardPage({
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <button
+            onClick={handleStartTour}
+            className="tour-button"
+            aria-label="Start dashboard tour"
+            style={{ position: "static" }} // Use static positioning here
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </button>
           <CounterButton
             label="Logout"
             onClick={handleLogout}
@@ -61,7 +128,7 @@ function DashboardPage({
 
       <div className="dashboard-grid">
         {/* --- Daily Standup Note FORM Widget --- */}
-        <div className="widget-card tucked-corners">
+        <div className="widget-card tucked-corners" data-tour-id="daily-note">
           <span className="corner top-left" />
           <span className="corner top-right" />
           <span className="corner bottom-left" />
@@ -176,7 +243,7 @@ function DashboardPage({
         </div>
 
         {/* --- Past Notes LIST Widget --- */}
-        <div className="widget-card">
+        <div className="widget-card" data-tour-id="past-notes">
           <div className="widget-header">
             <h2>Past Notes</h2>
           </div>
@@ -290,36 +357,44 @@ function DashboardPage({
         </div>
 
         {/* --- GitHub PRs Widget --- */}
-        <div className="widget-card">
+        <div className="widget-card" data-tour-id="github-prs">
           <GitHubPRList user={user} pullRequests={userPullRequests} />
         </div>
 
         {/* --- Edit Profile & Summary Aggregator Widgets --- */}
-        <EditProfileForm user={user} onSave={handleProfileUpdate} />
+        <div data-tour-id="edit-profile">
+          <EditProfileForm user={user} onSave={handleProfileUpdate} />
+        </div>
 
         {/* --- Aggregated Summary View Widget --- */}
-        <div className="widget-card">
-          <AggregatedSummary
+        <div className="widget-card" data-tour-id="aggregated-summary">
+          <div className="widget-card">
+            <AggregatedSummary
+              userList={userList}
+              aggregatedNotes={aggregatedNotes}
+            />
+          </div>
+        </div>
+
+        <div data-tour-id="summary-aggregator">
+          <SummaryAggregator
+            user={user}
             userList={userList}
-            aggregatedNotes={aggregatedNotes}
+            onSaveSelection={handleSaveSelection}
+            fetchAggregatedNotes={fetchAggregatedNotes}
           />
         </div>
 
-        <SummaryAggregator
-          user={user}
-          userList={userList}
-          onSaveSelection={handleSaveSelection}
-          fetchAggregatedNotes={fetchAggregatedNotes}
-        />
-
         {/* --- AI Summary Widget --- */}
-        <AISummary
-          onGenerate={handleGenerateSummary}
-          summary={aiSummary}
-          isSummarizing={isSummarizing}
-          error={aiError}
-          onClear={() => dispatch({ type: "CLEAR_AI_SUMMARY" })}
-        />
+        <div data-tour-id="ai-summary">
+          <AISummary
+            onGenerate={handleGenerateSummary}
+            summary={aiSummary}
+            isSummarizing={isSummarizing}
+            error={aiError}
+            onClear={() => dispatch({ type: "CLEAR_AI_SUMMARY" })}
+          />
+        </div>
       </div>
     </div>
   );
