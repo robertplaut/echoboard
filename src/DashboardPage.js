@@ -33,7 +33,7 @@ function DashboardPage({
 }) {
   useEffect(() => {
     dispatch({ type: "CLEAR_AI_SUMMARY" });
-  }, [user.id, dispatch]);
+  }, [user.id, dispatch]); // ✅ Fixed
 
   return (
     <div>
