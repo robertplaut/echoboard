@@ -1,6 +1,12 @@
 // src/App.js
 
-import React, { useEffect, useReducer, useCallback } from "react";
+import React, {
+  useEffect,
+  useReducer,
+  useCallback,
+  useState,
+  useLayoutEffect,
+} from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import LoginPage from "./LoginPage";
 import DashboardPage from "./DashboardPage";
@@ -9,9 +15,9 @@ import BackToTopButton from "./BackToTopButton";
 import supabase from "./supabaseClient";
 import ProtectedRoute from "./ProtectedRoute";
 import VerticalNav from "./VerticalNav";
-import LoginTour from "./LoginTour";
 import { fetchPullRequests } from "./githubApi";
 import { useToast } from "./ToastContext";
+import { useTour } from "./TourContext";
 import "./App.css";
 
 const GITHUB_OWNER = process.env.REACT_APP_GITHUB_OWNER;
@@ -29,7 +35,6 @@ const initialState = {
   githubUsername: "",
   userPullRequests: [],
   noteDate: new Date().toISOString().split("T")[0],
-  // The old `noteText` is replaced by four new fields
   yesterdayText: "",
   todayText: "",
   blockersText: "",
@@ -114,6 +119,90 @@ function reducer(state, action) {
   }
 }
 
+const Tour = () => {
+  const {
+    isTourOpen,
+    currentStep,
+    stopTour,
+    goToNextStep,
+    goToPrevStep,
+    isLastStep,
+    isFirstStep,
+  } = useTour();
+
+  const [targetRect, setTargetRect] = useState(null);
+
+  useLayoutEffect(() => {
+    let targetElement;
+    if (isTourOpen && currentStep) {
+      targetElement = document.querySelector(currentStep.selector);
+      if (targetElement) {
+        // Add the class to the target element
+        targetElement.classList.add("tour-target-element");
+
+        const rect = targetElement.getBoundingClientRect();
+        setTargetRect(rect);
+        targetElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "center",
+        });
+      }
+    }
+
+    // This is the cleanup function for the effect.
+    // It runs when the component unmounts or before the effect runs again.
+    return () => {
+      if (targetElement) {
+        // Always remove the class when the step changes or the tour closes.
+        targetElement.classList.remove("tour-target-element");
+      }
+    };
+  }, [isTourOpen, currentStep]);
+
+  if (!isTourOpen || !currentStep || !targetRect) {
+    return null;
+  }
+
+  // Calculate position for the popover
+  const popoverTop = targetRect.bottom + 10;
+  const popoverLeft = targetRect.left;
+
+  return (
+    <>
+      <div className="tour-overlay" onClick={stopTour} />
+      <div
+        className="tour-highlight"
+        style={{
+          top: targetRect.top,
+          left: targetRect.left,
+          width: targetRect.width,
+          height: targetRect.height,
+        }}
+      />
+      <div
+        className="tour-popover"
+        style={{
+          top: popoverTop,
+          left: popoverLeft,
+        }}
+      >
+        <p>{currentStep.content}</p>
+        <div className="tour-navigation">
+          {!isFirstStep && (
+            <button onClick={goToPrevStep} className="btn-secondary">
+              Previous
+            </button>
+          )}
+          <button onClick={goToNextStep} className="btn">
+            {isLastStep ? "Finish" : "Next"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -129,13 +218,11 @@ function App() {
     githubUsername,
     userPullRequests,
     noteDate,
-    // Destructure our four new state variables instead of noteText
     yesterdayText,
     todayText,
     blockersText,
     learningsText,
     userNotes,
-    // Add our new AI state variables here
     isSummarizing,
     aiSummary,
     aiError,
@@ -614,6 +701,7 @@ Standup notes for ${displayName}:
 
   return (
     <div className="app-container">
+      <Tour />
       {isDashboard && <VerticalNav />}
       <div
         style={{
@@ -630,20 +718,18 @@ Standup notes for ${displayName}:
         <Route
           path="/"
           element={
-            <LoginTour>
-              <LoginPage
-                groupedUsers={groupedUsers}
-                handleQuickLogin={handleQuickLogin}
-                handleCreateUser={handleCreateUser}
-                nameInput={nameInput}
-                displayNameInput={displayNameInput}
-                email={email}
-                newTeam={newTeam}
-                newRole={newRole}
-                githubUsername={githubUsername}
-                dispatch={dispatch}
-              />
-            </LoginTour>
+            <LoginPage
+              groupedUsers={groupedUsers}
+              handleQuickLogin={handleQuickLogin}
+              handleCreateUser={handleCreateUser}
+              nameInput={nameInput}
+              displayNameInput={displayNameInput}
+              email={email}
+              newTeam={newTeam}
+              newRole={newRole}
+              githubUsername={githubUsername}
+              dispatch={dispatch}
+            />
           }
         />
         <Route

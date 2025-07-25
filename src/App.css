@@ -368,3 +368,65 @@ input[type="date"] {
   background-color: var(--color-background-offset, var(--color-background));
   border-color: var(--color-border);
 }
+
+/* --- Custom Tour Component --- */
+
+.tour-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(18, 18, 18, 0.7);
+  z-index: 10000;
+}
+
+.tour-highlight {
+  position: fixed;
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(18, 18, 18, 0.7);
+  z-index: 10001;
+  transition: all 0.3s ease-in-out;
+}
+
+.tour-popover {
+  position: fixed;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 350px;
+  z-index: 10002;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease-in-out;
+}
+
+.tour-popover p {
+  margin: 0 0 1.5rem 0;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+}
+
+.tour-navigation {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* A secondary button style for the tour */
+.tour-navigation .btn-secondary {
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.tour-navigation .btn-secondary:hover {
+  background-color: var(--color-background);
+  border-color: var(--color-text-secondary);
+}
+
+/* --- Tour Target Element --- */
+.tour-target-element {
+  position: relative; /* Required for z-index to work */
+  z-index: 10001; /* Must be the same as the .tour-highlight z-index */
+}

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { useTour } from "@reactour/tour";
+import { useTour } from "./TourContext";
 
 function LoginPage({
   groupedUsers,
@@ -16,7 +16,19 @@ function LoginPage({
   email,
   dispatch,
 }) {
-  const { setIsOpen } = useTour();
+  const { startTour } = useTour();
+
+  const loginTourSteps = [
+    {
+      selector: '[data-tour-id="user-card"]',
+      content:
+        "Welcome to Echostatus! Click on any user card like this one to log in and view their dashboard.",
+    },
+  ];
+
+  const handleStartTour = () => {
+    startTour(loginTourSteps);
+  };
 
   return (
     <div>
@@ -37,17 +49,16 @@ function LoginPage({
           </a>
           .
         </p>
-        {/* Tour Trigger Button */}
         <button
-          onClick={() => setIsOpen(true)}
-          className="tour-button" // We will style this class later
+          onClick={handleStartTour}
+          className="tour-button"
           aria-label="Start page tour"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
             height="24"
-            viewBox="0 0 24 24"
+            viewBox="0 0 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -78,22 +89,17 @@ function LoginPage({
               </h2>
               <div className="user-card-grid" style={{ marginTop: "1.5rem" }}>
                 {groupedUsers[team].map((userObj, userIndex) => {
-                  // We'll identify the very first card rendered on the page
                   const isFirstCard = teamIndex === 0 && userIndex === 0;
-
                   return (
                     <Link
                       key={userObj.username}
                       to={`/user/${userObj.username}`}
                       className="user-card"
-                      // This data attribute is the "selector" our tour will look for.
-                      // We only apply it to the first card.
-                      data-tour={isFirstCard ? "user-card" : undefined}
+                      // Add our new data attribute
+                      data-tour-id={isFirstCard ? "user-card" : null}
                       style={{ textDecoration: "none" }}
                       onClick={(e) => {
-                        // Prevent the link from navigating immediately
                         e.preventDefault();
-                        // Manually call our login function
                         handleQuickLogin(userObj.username);
                       }}
                     >
