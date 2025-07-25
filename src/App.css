@@ -319,3 +319,28 @@ input[type="date"] {
   transform: rotate(-45deg);
   box-shadow: 0 -5px 10px -7px rgba(0, 0, 0, 0.5);
 }
+
+/* AI Summary loader */
+.loader {
+  width: 380px;
+  height: 22px;
+  border-radius: 20px;
+  color: #514b82;
+  border: 2px solid;
+  position: relative;
+  margin-top: 1rem;
+}
+.loader::before {
+  content: "";
+  position: absolute;
+  margin: 2px;
+  inset: 0 100% 0 0;
+  border-radius: inherit;
+  background: currentColor;
+  animation: l6 10s infinite;
+}
+@keyframes l6 {
+  100% {
+    inset: 0;
+  }
+}

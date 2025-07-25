@@ -1,6 +1,6 @@
 // src/DashboardPage.js
 
-import React from "react";
+import React, { useEffect } from "react";
 import CounterButton from "./CounterButton";
 import GitHubPRList from "./GitHubPRList";
 import EditProfileForm from "./EditProfileForm";
@@ -31,6 +31,10 @@ function DashboardPage({
   aggregatedNotes,
   fetchAggregatedNotes,
 }) {
+  useEffect(() => {
+    dispatch({ type: "CLEAR_AI_SUMMARY" });
+  }, [user.id, dispatch]);
+
   return (
     <div>
       <header className="app-header">

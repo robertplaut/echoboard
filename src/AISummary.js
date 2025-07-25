@@ -13,7 +13,10 @@ const AISummary = ({ onGenerate, summary, isSummarizing, error, onClear }) => {
     <div className="widget-card">
       <div className="widget-header">
         <h2>✨ AI Daily Summary</h2>
-        <p className="widget-subheading">Today's notes will be sent to AI for review based on users selected in the Summary Aggregator.</p>
+        <p className="widget-subheading">
+          Today's notes will be sent to AI for review based on users selected in
+          the Summary Aggregator.
+        </p>
         {/* We only show the "Clear" button if there's a summary or an error to clear. */}
         {(summary || error) && (
           <button onClick={onClear} className="btn-secondary btn-small">
@@ -35,8 +38,14 @@ const AISummary = ({ onGenerate, summary, isSummarizing, error, onClear }) => {
         </div>
       )}
 
-      {/* If the AI is working, show a loading message */}
-      {isSummarizing && <p>AI is thinking, please wait...</p>}
+      {isSummarizing && !summary && (
+        <div style={{ marginTop: "1rem" }}>
+          <p style={{ marginBottom: "0.5rem" }}>
+            AI is thinking, please wait...
+          </p>
+          <div className="loader" aria-label="Loading AI Summary" />
+        </div>
+      )}
 
       {/* If an error occurred, display it in a distinct style */}
       {error && (
