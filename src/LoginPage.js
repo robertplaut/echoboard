@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
+import { useTour } from "@reactour/tour";
 
 function LoginPage({
   groupedUsers,
@@ -15,9 +16,17 @@ function LoginPage({
   email,
   dispatch,
 }) {
+  const { setIsOpen } = useTour();
+
   return (
     <div>
-      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+      <div
+        style={{
+          textAlign: "center",
+          marginBottom: "3rem",
+          position: "relative",
+        }}
+      >
         <h1 style={{ fontSize: "2.5rem", color: "var(--color-dark)" }}>
           Welcome to Echostatus
         </h1>
@@ -28,13 +37,35 @@ function LoginPage({
           </a>
           .
         </p>
+        {/* Tour Trigger Button */}
+        <button
+          onClick={() => setIsOpen(true)}
+          className="tour-button" // We will style this class later
+          aria-label="Start page tour"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </button>
       </div>
 
       {/* User Selection Grid */}
       {Object.keys(groupedUsers).length > 0 ? (
         Object.keys(groupedUsers)
           .sort()
-          .map((team) => (
+          .map((team, teamIndex) => (
             <div key={team} style={{ marginBottom: "3rem" }}>
               <h2
                 style={{
@@ -46,28 +77,36 @@ function LoginPage({
                 {team}
               </h2>
               <div className="user-card-grid" style={{ marginTop: "1.5rem" }}>
-                {groupedUsers[team].map((userObj) => (
-                  <Link
-                    key={userObj.username}
-                    to={`/user/${userObj.username}`}
-                    className="user-card"
-                    style={{ textDecoration: "none" }}
-                    onClick={(e) => {
-                      // Prevent the link from navigating immediately
-                      e.preventDefault();
-                      // Manually call our login function
-                      handleQuickLogin(userObj.username);
-                    }}
-                  >
-                    <img
-                      src={`https://api.dicebear.com/6.x/thumbs/svg?seed=${userObj.username}`}
-                      alt={userObj.username}
-                      className="avatar-img"
-                    />
-                    <div className="user-name">{userObj.display_name}</div>
-                    <div className="user-role">{userObj.role}</div>
-                  </Link>
-                ))}
+                {groupedUsers[team].map((userObj, userIndex) => {
+                  // We'll identify the very first card rendered on the page
+                  const isFirstCard = teamIndex === 0 && userIndex === 0;
+
+                  return (
+                    <Link
+                      key={userObj.username}
+                      to={`/user/${userObj.username}`}
+                      className="user-card"
+                      // This data attribute is the "selector" our tour will look for.
+                      // We only apply it to the first card.
+                      data-tour={isFirstCard ? "user-card" : undefined}
+                      style={{ textDecoration: "none" }}
+                      onClick={(e) => {
+                        // Prevent the link from navigating immediately
+                        e.preventDefault();
+                        // Manually call our login function
+                        handleQuickLogin(userObj.username);
+                      }}
+                    >
+                      <img
+                        src={`https://api.dicebear.com/6.x/thumbs/svg?seed=${userObj.username}`}
+                        alt={userObj.username}
+                        className="avatar-img"
+                      />
+                      <div className="user-name">{userObj.display_name}</div>
+                      <div className="user-role">{userObj.role}</div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           ))
