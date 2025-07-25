@@ -57,7 +57,11 @@ function DashboardPage({
 
       <div className="dashboard-grid">
         {/* --- Daily Standup Note FORM Widget --- */}
-        <div className="widget-card">
+        <div className="widget-card tucked-corners">
+          <span className="corner top-left" />
+          <span className="corner top-right" />
+          <span className="corner bottom-left" />
+          <span className="corner bottom-right" />
           <div className="widget-header">
             <h2>📝 Daily Standup Note</h2>
           </div>

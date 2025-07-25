@@ -6,12 +6,13 @@
 /* 2. Define our color palette as CSS variables */
 :root {
   --color-background: #f0f2f5;
+  --color-header-background: rgb(156, 209, 245);
   --color-surface: #ffffff;
   --color-primary: #007bff;
   --color-primary-hover: #0056b3;
   --color-dark: #212529;
   --color-text-primary: #343a40;
-  --color-text-secondary: #6c757d;
+  --color-text-secondary: #464e56;
   --color-border: #dee2e6;
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 
@@ -25,6 +26,7 @@
 /* Dark Mode Theme */
 [data-theme="dark"] {
   --color-background: #121212;
+  --color-header-background: #121212;
   --color-surface: #1e1e1e;
   --color-primary: #3a97ff;
   --color-primary-hover: #5aa6ff;
