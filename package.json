@@ -3,6 +3,7 @@
   "version": "2.2.0",
   "private": true,
   "dependencies": {
+    "@floating-ui/react": "^0.27.13",
     "@reactour/popover": "^1.3.0",
     "@reactour/tour": "^3.8.0",
     "@supabase/supabase-js": "^2.50.3",

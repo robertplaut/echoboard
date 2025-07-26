@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useState,
   useLayoutEffect,
+  useRef,
 } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import LoginPage from "./LoginPage";
@@ -18,6 +19,17 @@ import VerticalNav from "./VerticalNav";
 import { fetchPullRequests } from "./githubApi";
 import { useToast } from "./ToastContext";
 import { useTour } from "./TourContext";
+import {
+  useFloating,
+  autoUpdate,
+  offset,
+  flip,
+  shift,
+  useDismiss,
+  useRole,
+  useInteractions,
+  FloatingFocusManager,
+} from "@floating-ui/react";
 import "./App.css";
 
 const GITHUB_OWNER = process.env.REACT_APP_GITHUB_OWNER;
@@ -130,76 +142,110 @@ const Tour = () => {
     isFirstStep,
   } = useTour();
 
+  // We are replacing useState with useRef for the target element
+  const targetRef = useRef(null);
   const [targetRect, setTargetRect] = useState(null);
 
-  useLayoutEffect(() => {
-    let targetElement;
-    if (isTourOpen && currentStep) {
-      targetElement = document.querySelector(currentStep.selector);
-      if (targetElement) {
-        // Add the class to the target element
-        targetElement.classList.add("tour-target-element");
+  const { refs, floatingStyles, context } = useFloating({
+    // We can now directly pass the ref's current value
+    elements: {
+      reference: targetRef.current,
+    },
+    // 2. This runs whenever the popover is opened.
+    open: isTourOpen,
+    onOpenChange: (open) => {
+      if (!open) {
+        stopTour();
+      }
+    },
+    // 3. This tells Floating UI where to try and place the popover.
+    placement: "bottom",
+    // 4. This is where the magic happens. These are "middleware".
+    middleware: [
+      offset(10), // Add 10px of space between the target and the popover.
+      flip({
+        fallbackPlacements: ["top", "right", "left"],
+      }),
+      shift({ padding: 10 }), // If it's still off-screen, "shift" it into view.
+    ],
+    // 5. This ensures the position is updated on scroll or resize.
+    whileElementsMounted: autoUpdate,
+  });
 
-        const rect = targetElement.getBoundingClientRect();
-        setTargetRect(rect);
-        targetElement.scrollIntoView({
+  // These hooks add accessibility features and allow closing by clicking outside.
+  const dismiss = useDismiss(context);
+  const role = useRole(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    dismiss,
+    role,
+  ]);
+
+  useLayoutEffect(() => {
+    if (isTourOpen && currentStep) {
+      const newTargetElement = document.querySelector(currentStep.selector);
+      // Store the element in the ref's .current property
+      targetRef.current = newTargetElement;
+
+      if (newTargetElement) {
+        newTargetElement.classList.add("tour-target-element");
+        // We still need to measure it for our highlight box
+        setTargetRect(newTargetElement.getBoundingClientRect());
+
+        newTargetElement.scrollIntoView({
           behavior: "smooth",
-          block: "center",
+          block: "nearest",
           inline: "center",
         });
       }
     }
 
-    // This is the cleanup function for the effect.
-    // It runs when the component unmounts or before the effect runs again.
     return () => {
-      if (targetElement) {
-        // Always remove the class when the step changes or the tour closes.
-        targetElement.classList.remove("tour-target-element");
+      // Use the ref's value for cleanup
+      if (targetRef.current) {
+        targetRef.current.classList.remove("tour-target-element");
       }
     };
   }, [isTourOpen, currentStep]);
 
-  if (!isTourOpen || !currentStep || !targetRect) {
+  // Our condition now checks the ref
+  if (!isTourOpen || !currentStep || !targetRef.current || !targetRect) {
     return null;
   }
 
-  // Calculate position for the popover
-  const popoverTop = targetRect.bottom + 10;
-  const popoverLeft = targetRect.left;
-
   return (
-    <>
-      <div className="tour-overlay" onClick={stopTour} />
-      <div
-        className="tour-highlight"
-        style={{
-          top: targetRect.top,
-          left: targetRect.left,
-          width: targetRect.width,
-          height: targetRect.height,
-        }}
-      />
-      <div
-        className="tour-popover"
-        style={{
-          top: popoverTop,
-          left: popoverLeft,
-        }}
-      >
-        <p>{currentStep.content}</p>
-        <div className="tour-navigation">
-          {!isFirstStep && (
-            <button onClick={goToPrevStep} className="btn-secondary">
-              Previous
+    <FloatingFocusManager context={context} modal={true}>
+      <>
+        <div className="tour-overlay" onClick={stopTour} />
+        <div
+          className="tour-highlight"
+          style={{
+            top: targetRect.top,
+            left: targetRect.left,
+            width: targetRect.width,
+            height: targetRect.height,
+          }}
+        />
+        {/* The popover now uses refs and styles from Floating UI */}
+        <div
+          className="tour-popover"
+          ref={refs.setFloating}
+          style={floatingStyles}
+          {...getFloatingProps()}
+        >
+          <p>{currentStep.content}</p>
+          <div className="tour-navigation">
+            {!isFirstStep && (
+              <button onClick={goToPrevStep} className="btn-secondary">
+                Previous
+              </button>
+            )}
+            <button onClick={goToNextStep} className="btn">
+              {isLastStep ? "Finish" : "Next"}
             </button>
-          )}
-          <button onClick={goToNextStep} className="btn">
-            {isLastStep ? "Finish" : "Next"}
-          </button>
+          </div>
         </div>
-      </div>
-    </>
+      </>
+    </FloatingFocusManager>
   );
 };
 
