@@ -167,7 +167,7 @@ function DashboardPage({
                     value: e.target.value,
                   })
                 }
-                rows="3"
+                rows="2"
               />
             </div>
             {/* Today */}
@@ -183,7 +183,7 @@ function DashboardPage({
                     value: e.target.value,
                   })
                 }
-                rows="3"
+                rows="2"
               />
             </div>
             {/* Blockers */}
@@ -229,7 +229,6 @@ function DashboardPage({
                 textAlign: "left",
               }}
             >
-              <p>Notes:</p>
               <ul>
                 <li>
                   All fields are optional, but at least one must be used to
@@ -368,12 +367,10 @@ function DashboardPage({
 
         {/* --- Aggregated Summary View Widget --- */}
         <div className="widget-card" data-tour-id="aggregated-summary">
-          <div className="widget-card">
-            <AggregatedSummary
-              userList={userList}
-              aggregatedNotes={aggregatedNotes}
-            />
-          </div>
+          <AggregatedSummary
+            userList={userList}
+            aggregatedNotes={aggregatedNotes}
+          />
         </div>
 
         <div data-tour-id="summary-aggregator">
