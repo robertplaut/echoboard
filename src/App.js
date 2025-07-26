@@ -175,10 +175,7 @@ const Tour = () => {
   // These hooks add accessibility features and allow closing by clicking outside.
   const dismiss = useDismiss(context);
   const role = useRole(context);
-  const { getReferenceProps, getFloatingProps } = useInteractions([
-    dismiss,
-    role,
-  ]);
+  const { getFloatingProps } = useInteractions([dismiss, role]);
 
   useLayoutEffect(() => {
     if (isTourOpen && currentStep) {
