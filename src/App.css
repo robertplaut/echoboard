@@ -189,7 +189,7 @@ hr {
 /* Utility Class for Scrollable Widget Content */
 
 .widget-scroll-container {
-  max-height: 850px; /* Adjust this value as needed */
+  max-height: 670px; /* Adjust this value as needed */
   overflow-y: auto; /* Show a vertical scrollbar only when content overflows */
   padding-right: 1rem; /* Add some space so the scrollbar doesn't hug the content */
   margin-right: -1rem; /* Offset the padding to maintain alignment */
